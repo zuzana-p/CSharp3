@@ -1,7 +1,5 @@
 namespace ToDoList.WebApi;
 
-using System.IO.Compression;
-using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Mvc;
 using ToDoList.Domain.DTOs;
 using ToDoList.Domain.Models;
@@ -13,14 +11,14 @@ public class ToDoItemsController : ControllerBase
     private static List<ToDoItem> items = [];
 
     [HttpPost]
-    public IActionResult Create(ToDoItemCreateRequestDto request) //pouzijeme DTO - Data Transfer Object
+    public IActionResult Create(ToDoItemCreateRequestDto request)
     {
         try
         {
             var toDoItem = request.ToDomain();
-            toDoItem.ToDoItemId = items.Count != 0 ? items.Max(x => x.ToDoItemId) : 1;
+            toDoItem.ToDoItemId = items.Count != 0 ? items.Max(x => x.ToDoItemId) + 1 : 1;
             items.Add(toDoItem);
-            return CreatedAtAction(nameof(ReadById), toDoItem.ToDoItemId); //TODO Extra (nepovinné): Použij CreatedAtAction, abys vrátila vytvořený předmět společně s cestou kde se dá najít a s jeho ID.
+            return Created(); //TODO Extra (nepovinné): Použij CreatedAtAction, abys vrátila vytvořený předmět společně s cestou kde se dá najít a s jeho ID.
         }
         catch (Exception ex)
         {
@@ -81,6 +79,8 @@ public class ToDoItemsController : ControllerBase
                 // Q: Nemůže se mi index pod rukama změnit? Např. při přístupu více lidí. (Následuji zadání k úkolu, proto přes FindIndex).
 
                 var updatedToDoItem = request.ToDomain();
+                updatedToDoItem.ToDoItemId = todoItemId;
+
                 items[indexOfOriginalToDoItem] = updatedToDoItem;
                 return NoContent();
             }
