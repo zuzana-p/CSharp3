@@ -8,7 +8,17 @@ using ToDoList.Domain.Models;
 [ApiController]
 public class ToDoItemsController : ControllerBase
 {
-    private static List<ToDoItem> items = [];
+    private readonly List<ToDoItem> _items;
+
+    public ToDoItemsController()
+    {
+        _items = new List<ToDoItem>();
+    }
+
+    public ToDoItemsController(List<ToDoItem> items)
+    {
+        _items = items;
+    }
 
     [HttpPost]
     public IActionResult Create(ToDoItemCreateRequestDto request)
@@ -16,9 +26,13 @@ public class ToDoItemsController : ControllerBase
         try
         {
             var toDoItem = request.ToDomain();
-            toDoItem.ToDoItemId = items.Count != 0 ? items.Max(x => x.ToDoItemId) + 1 : 1;
-            items.Add(toDoItem);
-            return Created(); //TODO Extra (nepovinné): Použij CreatedAtAction, abys vrátila vytvořený předmět společně s cestou kde se dá najít a s jeho ID.
+            toDoItem.ToDoItemId = _items.Count != 0 ? _items.Max(x => x.ToDoItemId) + 1 : 1;
+            _items.Add(toDoItem);
+            return CreatedAtAction(
+                actionName: nameof(ReadById),
+                routeValues: new { toDoItemId = toDoItem.ToDoItemId },
+                value: new ToDoItemGetResponseDto(toDoItem)
+                );
         }
         catch (Exception ex)
         {
@@ -31,13 +45,13 @@ public class ToDoItemsController : ControllerBase
     {
         try
         {
-            if (items == null)
+            if (_items == null)
             {
                 return NotFound();
             }
             else
             {
-                return Ok(items.Select(x => new ToDoItemGetResponseDto(x)).ToList()); // TODO lepsi pres konstruktor primo z ToDoItem
+                return Ok(_items.Select(x => new ToDoItemGetResponseDto(x)).ToList());
             }
         }
         catch (Exception ex)
@@ -51,7 +65,7 @@ public class ToDoItemsController : ControllerBase
     {
         try
         {
-            var item = items.Find(x => x.ToDoItemId == todoItemId); // Q: Z toho co jsem dohledala Find není z LINQ. Ale podle zadání úkolu je. Jak to prosím je?
+            var item = _items.Find(x => x.ToDoItemId == todoItemId); // Q: Z toho co jsem dohledala Find není z LINQ. Ale podle zadání úkolu je. Jak to prosím je?
 
             if (item == null)
             {
@@ -73,15 +87,15 @@ public class ToDoItemsController : ControllerBase
     {
         try
         {
-            if (items.Any(x => x.ToDoItemId == todoItemId))
+            if (_items.Any(x => x.ToDoItemId == todoItemId))
             {
-                int indexOfOriginalToDoItem = items.FindIndex(x => x.ToDoItemId == todoItemId);
+                int indexOfOriginalToDoItem = _items.FindIndex(x => x.ToDoItemId == todoItemId);
                 // Q: Nemůže se mi index pod rukama změnit? Např. při přístupu více lidí. (Následuji zadání k úkolu, proto přes FindIndex).
 
                 var updatedToDoItem = request.ToDomain();
                 updatedToDoItem.ToDoItemId = todoItemId;
 
-                items[indexOfOriginalToDoItem] = updatedToDoItem;
+                _items[indexOfOriginalToDoItem] = updatedToDoItem;
                 return NoContent();
             }
             else
@@ -101,17 +115,17 @@ public class ToDoItemsController : ControllerBase
     {
         try
         {
-            var toDoItemToDelete = items.Find(x => x.ToDoItemId == todoItemId);
+            var toDoItemToDelete = _items.Find(x => x.ToDoItemId == todoItemId);
 
             if (toDoItemToDelete != null) // Find, protože následuji zadání k úkolu
             {
-                if (items.Remove(toDoItemToDelete))
+                if (_items.Remove(toDoItemToDelete))
                 {
                     return NoContent();
                 }
                 else
                 {
-                    return Problem("Problem occured during deletion}.", null, StatusCodes.Status500InternalServerError);
+                    return Problem("Problem occured during deletion.", null, StatusCodes.Status500InternalServerError);
                 }
             }
             else
@@ -123,6 +137,16 @@ public class ToDoItemsController : ControllerBase
         {
             return Problem(ex.Message, null, StatusCodes.Status500InternalServerError);
         }
+    }
+
+    public void AddItemToStorage(ToDoItem item)
+    {
+        _items.Add(item);
+    }
+
+    public List<ToDoItem> GetAllItems()
+    {
+        return _items;
     }
 
 }
