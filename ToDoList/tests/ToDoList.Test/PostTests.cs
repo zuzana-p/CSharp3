@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 using ToDoList.Domain.DTOs;
 using ToDoList.WebApi;
 
-public class PostTests
+public class PostTests : TestsBase
 {
+    public PostTests() : base(100) { }
+
     [Theory] // Neukazovali jsme si, ani neznam z praxe. Netuším, zda je to správně (ale funguje to). Jen jsem hledala jak pouzit parametr.
     [InlineData(false)]
     [InlineData(true)]
@@ -14,10 +16,8 @@ public class PostTests
         // Arrange
         var toDoItemCreateRequestDto = new ToDoItemCreateRequestDto("Some name", "Some description", isCompleted);
 
-        var controller = new ToDoItemsController();
-
         // Act
-        var result = controller.Create(toDoItemCreateRequestDto);
+        var result = Controller.Create(toDoItemCreateRequestDto);
 
         // Assert
         var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result);
@@ -36,7 +36,7 @@ public class PostTests
     [Fact]
     public void Post_TODO_Returns500InternalServerError()
     {
-        // TODO: nevím jak simulovat exception
+        throw new NotImplementedException();
     }
 
 }

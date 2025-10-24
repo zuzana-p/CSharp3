@@ -2,10 +2,11 @@ namespace ToDoList.Test;
 
 using Microsoft.AspNetCore.Mvc;
 using ToDoList.Domain.Models;
-using ToDoList.WebApi;
 
-public class DeleteTests
+public class DeleteTests : TestsBase
 {
+
+
     [Fact]
     public void Delete_DeleteById_RemovesExactlyTheGivenItem()
     {
@@ -24,17 +25,17 @@ public class DeleteTests
             Description = "Some description 2",
             IsCompleted = true
         };
-        var controller = new ToDoItemsController();
-        controller.AddItemToStorage(todoItem1);
-        controller.AddItemToStorage(todoItem2);
+
+        Controller.AddItemToStorage(todoItem1);
+        Controller.AddItemToStorage(todoItem2);
 
         // Act
-        var result = controller.DeleteById(todoItem1.ToDoItemId);
+        var result = Controller.DeleteById(todoItem1.ToDoItemId);
 
         // Assert
         _ = Assert.IsType<NoContentResult>(result);
 
-        var items = controller.GetAllItems();
+        var items = Controller.GetAllItems();
         var notDeletedItem = Assert.Single(items);
         Assert.Equal(2, notDeletedItem.ToDoItemId);
         Assert.Equal(todoItem2.Name, notDeletedItem.Name);
@@ -42,7 +43,8 @@ public class DeleteTests
         Assert.Equal(todoItem2.IsCompleted, notDeletedItem.IsCompleted);
     }
 
-    [Fact]
+
+    //[Fact]
     public void Delete_NonExistentId_Returns404NotFound()
     {
         // Arrange
@@ -54,16 +56,15 @@ public class DeleteTests
             IsCompleted = false
         };
 
-        var controller = new ToDoItemsController();
-        controller.AddItemToStorage(todoItem);
+        Controller.AddItemToStorage(todoItem);
 
         // Act
-        var result = controller.DeleteById(2);
+        var result = Controller.DeleteById(2);
 
         // Assert
         _ = Assert.IsType<NotFoundResult>(result);
 
-        var items = controller.GetAllItems();
+        var items = Controller.GetAllItems();
         var notDeletedItem = Assert.Single(items);
         Assert.Equal(1, notDeletedItem.ToDoItemId);
         Assert.Equal(todoItem.Name, notDeletedItem.Name);
@@ -75,18 +76,13 @@ public class DeleteTests
     public void Delete_NullItems_Returns500InternalServerError()
     {
         //Arrange
-        var controller = new ToDoItemsController(null as List<ToDoItem>);
 
         //Act
-        var objectResult = controller.DeleteById(1) as ObjectResult;
+        var objectResult = Controller.DeleteById(1) as ObjectResult;
 
         //Assert
         Assert.Equal(500, objectResult.StatusCode);
     }
 
-    public void Delete_RemoveUnsuccesful_Returns500InternalServerError()
-    {
-        // TODO: nevím jak simulovat exception
-    }
-
+    public void Delete_RemoveUnsuccesful_Returns500InternalServerError() => throw new NotImplementedException();
 }

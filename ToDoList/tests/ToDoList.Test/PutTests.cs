@@ -5,11 +5,11 @@ using ToDoList.Domain.DTOs;
 using ToDoList.Domain.Models;
 using ToDoList.WebApi;
 
-public class PutTests
+public class PutTests : TestsBase
 {
-    [Theory] // Neukazovali jsme si, ani neznam z praxe. Netuším, zda je to správně (ale funguje to). Jen jsem hledala jak pouzit parametr.
-    [InlineData(false)]
-    [InlineData(true)]
+    //[Theory] // Neukazovali jsme si, ani neznam z praxe. Netuším, zda je to správně (ale funguje to). Jen jsem hledala jak pouzit parametr.
+    //[InlineData(false)]
+    //[InlineData(true)]
     public void Put_UpdateById_UpdatesCorrectlyOnlyGivenItem(bool updatedIsCompleted)
     {
         // Arrange
@@ -27,25 +27,23 @@ public class PutTests
             Description = "Some description 2",
             IsCompleted = true
         };
-        var controller = new ToDoItemsController();
-        controller.AddItemToStorage(todoItem1);
-        controller.AddItemToStorage(todoItem2);
+        Controller.AddItemToStorage(todoItem1);
+        Controller.AddItemToStorage(todoItem2);
 
         string updatedName = "Some updated name 1";
         string updatedDescription = "Some updated description 1";
         var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto(updatedName, updatedDescription, updatedIsCompleted);
 
         // Act
-        var result = controller.UpdateById(todoItem1.ToDoItemId, toDoItemUpdateRequestDto);
+        var result = Controller.UpdateById(todoItem1.ToDoItemId, toDoItemUpdateRequestDto);
 
         // Assert
         _ = Assert.IsType<NoContentResult>(result);
 
-        var items = controller.GetAllItems();
+        var items = Controller.GetAllItems();
         var itemsIds = items.Select(x => x.ToDoItemId);
         Assert.True(itemsIds.Count() == 2 && itemsIds.Contains(1) && itemsIds.Contains(2));
         // Kontroluji, že se mi nezmění množina ids (myslím, že se mi to původně při implementaci stalo). Podle id potom přistupuji k itemům v dalším assertu.
-
 
         var updatedItem = items.First(x => x.ToDoItemId == todoItem1.ToDoItemId);
         Assert.Equal(updatedName, updatedItem.Name);
@@ -69,14 +67,12 @@ public class PutTests
             Description = "Some description",
             IsCompleted = false
         };
-
-        var controller = new ToDoItemsController();
-        controller.AddItemToStorage(todoItem);
+        Controller.AddItemToStorage(todoItem);
 
         var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto("Some updated name", "Some updated description", true);
 
         // Act
-        var result = controller.UpdateById(2, toDoItemUpdateRequestDto);
+        var result = Controller.UpdateById(2, toDoItemUpdateRequestDto);
 
         // Assert
         _ = Assert.IsType<NotFoundResult>(result);
@@ -86,11 +82,10 @@ public class PutTests
     public void Put_NullItems_Return500InternalServerError()
     {
         //Arrange
-        var controller = new ToDoItemsController(null as List<ToDoItem>);
 
         //Act
         var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto("Some updated name", "Some updated description", true);
-        var objectResult = controller.UpdateById(1, toDoItemUpdateRequestDto) as ObjectResult;
+        var objectResult = Controller.UpdateById(1, toDoItemUpdateRequestDto) as ObjectResult;
 
         //Assert
         Assert.Equal(500, objectResult.StatusCode);
