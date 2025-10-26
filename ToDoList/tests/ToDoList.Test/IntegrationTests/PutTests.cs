@@ -1,28 +1,28 @@
-namespace ToDoList.Test;
+namespace ToDoList.Test.IntegrationTests;
 
 using Microsoft.AspNetCore.Mvc;
 using ToDoList.Domain.DTOs;
 using ToDoList.Domain.Models;
-using ToDoList.WebApi;
 
 public class PutTests : TestsBase
 {
-    //[Theory] // Neukazovali jsme si, ani neznam z praxe. Netuším, zda je to správně (ale funguje to). Jen jsem hledala jak pouzit parametr.
-    //[InlineData(false)]
-    //[InlineData(true)]
+    // Update tests have itemId = 3x
+    [Theory] // Neukazovali jsme si, ani neznam z praxe. Netuším, zda je to správně (ale funguje to). Jen jsem hledala jak pouzit parametr.
+    [InlineData(false)]
+    [InlineData(true)]
     public void Put_UpdateById_UpdatesCorrectlyOnlyGivenItem(bool updatedIsCompleted)
     {
         // Arrange
         var todoItem1 = new ToDoItem
         {
-            ToDoItemId = 1,
+            ToDoItemId = 31,
             Name = "Some name 1",
             Description = "Some description 1",
             IsCompleted = false
         };
         var todoItem2 = new ToDoItem
         {
-            ToDoItemId = 2,
+            ToDoItemId = 32,
             Name = "Some name 2",
             Description = "Some description 2",
             IsCompleted = true
@@ -42,7 +42,7 @@ public class PutTests : TestsBase
 
         var items = Controller.GetAllItems();
         var itemsIds = items.Select(x => x.ToDoItemId);
-        Assert.True(itemsIds.Count() == 2 && itemsIds.Contains(1) && itemsIds.Contains(2));
+        Assert.True(itemsIds.Count() == 2 && itemsIds.Contains(31) && itemsIds.Contains(32));
         // Kontroluji, že se mi nezmění množina ids (myslím, že se mi to původně při implementaci stalo). Podle id potom přistupuji k itemům v dalším assertu.
 
         var updatedItem = items.First(x => x.ToDoItemId == todoItem1.ToDoItemId);
@@ -62,7 +62,7 @@ public class PutTests : TestsBase
         // Arrange
         var todoItem = new ToDoItem
         {
-            ToDoItemId = 1,
+            ToDoItemId = 31,
             Name = "Some name",
             Description = "Some description",
             IsCompleted = false
@@ -72,22 +72,12 @@ public class PutTests : TestsBase
         var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto("Some updated name", "Some updated description", true);
 
         // Act
-        var result = Controller.UpdateById(2, toDoItemUpdateRequestDto);
+        var result = Controller.UpdateById(32, toDoItemUpdateRequestDto);
 
         // Assert
         _ = Assert.IsType<NotFoundResult>(result);
     }
 
     [Fact]
-    public void Put_NullItems_Return500InternalServerError()
-    {
-        //Arrange
-
-        //Act
-        var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto("Some updated name", "Some updated description", true);
-        var objectResult = Controller.UpdateById(1, toDoItemUpdateRequestDto) as ObjectResult;
-
-        //Assert
-        Assert.Equal(500, objectResult.StatusCode);
-    }
+    public void Put_TODO_Return500InternalServerError_NOTIMPLEMENTED() => throw new NotImplementedException();
 }

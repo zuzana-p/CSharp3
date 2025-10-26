@@ -1,4 +1,4 @@
-namespace ToDoList.Test;
+namespace ToDoList.Test.IntegrationTests;
 
 using ToDoList.Persistence;
 using ToDoList.WebApi;
@@ -8,10 +8,9 @@ public class TestsBase : IDisposable
     protected ToDoItemsContext DbContext { get; }
     protected ToDoItemsController Controller { get; }
 
-    public TestsBase(int maxUsedId)
+    public TestsBase()
     {
-        //DbContext = new("DataSource=../data/unitTestsDb.db"); // Q: jaká je praxe? Spíš k testům nebo do filu data?
-        DbContext = new("DataSource=unitTestsDb.db", maxUsedId);
+        DbContext = new("Data Source=../../../data/localdb_test.db");
         Controller = new ToDoItemsController(DbContext);
     }
 
@@ -20,7 +19,7 @@ public class TestsBase : IDisposable
     {
         var allEntities = DbContext.ToDoItems.ToList();
         DbContext.RemoveRange(allEntities);
-        DbContext.SaveChanges();
+        _ = DbContext.SaveChanges();
         DbContext.Dispose();
     }
 

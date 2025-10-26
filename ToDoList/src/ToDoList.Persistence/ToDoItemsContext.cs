@@ -1,6 +1,5 @@
 ﻿namespace ToDoList.Persistence;
 
-using Humanizer;
 using Microsoft.EntityFrameworkCore;
 using ToDoList.Domain.Models;
 

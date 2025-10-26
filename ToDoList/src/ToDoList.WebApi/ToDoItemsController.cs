@@ -2,7 +2,6 @@ namespace ToDoList.WebApi;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using ToDoList.Domain.DTOs;
 using ToDoList.Domain.Models;
 using ToDoList.Persistence;
@@ -154,7 +153,11 @@ public class ToDoItemsController(ToDoItemsContext dbContext) : ControllerBase
         }
     }
 
-    public void AddItemToStorage(ToDoItem item) => dbContext.ToDoItems.Add(item);
+    public void AddItemToStorage(ToDoItem item)
+    {
+        dbContext.ToDoItems.Add(item);
+        dbContext.SaveChanges();
+    }
 
     public DbSet<ToDoItem> GetAllItems() => dbContext.ToDoItems;
 
