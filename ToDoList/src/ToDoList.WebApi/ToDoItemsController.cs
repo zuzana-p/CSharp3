@@ -1,9 +1,7 @@
 namespace ToDoList.WebApi;
 
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using ToDoList.Domain.DTOs;
-using ToDoList.Domain.Models;
 using ToDoList.Persistence;
 
 [Route("api/[controller]")] //localhost:5000/api/ToDoItems
@@ -13,17 +11,14 @@ public class ToDoItemsController(ToDoItemsContext dbContext) : ControllerBase
     private readonly ToDoItemsContext dbContext = dbContext;
 
     [HttpPost]
-    public IActionResult Create(ToDoItemCreateRequestDto request)
+    public ActionResult<ToDoItemGetResponseDto> Create(ToDoItemCreateRequestDto request)
     {
         try
         {
             var toDoItem = request.ToDomain();
-            toDoItem.ToDoItemId = dbContext.MaxUsedId + 1; // TODOzpa ošetřit lépe
-            dbContext.MaxUsedId = toDoItem.ToDoItemId;
             _ = dbContext.ToDoItems.Add(toDoItem);
-            int savedRows = dbContext.SaveChanges();
 
-            if (savedRows == 1)
+            if (dbContext.SaveChanges() == 1)
             {
                 return CreatedAtAction(
                     actionName: nameof(ReadById),
@@ -43,11 +38,11 @@ public class ToDoItemsController(ToDoItemsContext dbContext) : ControllerBase
     }
 
     [HttpGet]
-    public IActionResult Read()
+    public ActionResult<IEnumerable<ToDoItemGetResponseDto>> Read()
     {
         try
         {
-            if (dbContext.ToDoItems == null)
+            if (!dbContext.ToDoItems.Any())
             {
                 return NotFound();
             }
@@ -63,7 +58,7 @@ public class ToDoItemsController(ToDoItemsContext dbContext) : ControllerBase
     }
 
     [HttpGet("{todoItemId:int}")]
-    public IActionResult ReadById(int todoItemId)
+    public ActionResult<ToDoItemGetResponseDto> ReadById(int todoItemId)
     {
         try
         {
@@ -152,13 +147,4 @@ public class ToDoItemsController(ToDoItemsContext dbContext) : ControllerBase
             return Problem(ex.Message, null, StatusCodes.Status500InternalServerError);
         }
     }
-
-    public void AddItemToStorage(ToDoItem item)
-    {
-        dbContext.ToDoItems.Add(item);
-        dbContext.SaveChanges();
-    }
-
-    public DbSet<ToDoItem> GetAllItems() => dbContext.ToDoItems;
-
 }

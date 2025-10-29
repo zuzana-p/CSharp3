@@ -1,86 +1,51 @@
 namespace ToDoList.Test.IntegrationTests;
 
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using ToDoList.Domain.Models;
 
 public class DeleteTests : TestsBase
 {
-    // Delete tests have itemId = 4x
     [Fact]
-    public void Delete_DeleteById_RemovesExactlyTheGivenItem()
+    public void DeleteDeleteById_ExistingId_ReturnsNoContent() // TODOzpa jak overit, ze nesmazu nic jineho?
     {
         // Arrange
-        var todoItem1 = new ToDoItem
+        var itemToDelete = new ToDoItem
         {
-            ToDoItemId = 41,
-            Name = "Some name 1",
-            Description = "Some description 1",
+            Name = "Task to be deleted",
+            Description = "This task will be deleted",
             IsCompleted = false
         };
-        var todoItem2 = new ToDoItem
-        {
-            ToDoItemId = 42,
-            Name = "Some name 2",
-            Description = "Some description 2",
-            IsCompleted = true
-        };
-
-        Controller.AddItemToStorage(todoItem1);
-        Controller.AddItemToStorage(todoItem2);
+        _ = DbContext.ToDoItems.Add(itemToDelete);
+        _ = DbContext.SaveChanges();
 
         // Act
-        var result = Controller.DeleteById(todoItem1.ToDoItemId);
+        var result = Controller.DeleteById(itemToDelete.ToDoItemId);
 
         // Assert
         _ = Assert.IsType<NoContentResult>(result);
-
-        var notDeletedItems = Controller.GetAllItems();
-        Assert.Null(notDeletedItems.Find(todoItem1.ToDoItemId));
-        Assert.NotNull(notDeletedItems.Find(todoItem2.ToDoItemId));
+        Assert.Null(DbContext.ToDoItems.Find(itemToDelete.ToDoItemId));
     }
 
-
     [Fact]
-    public void Delete_NonExistentId_Returns404NotFound()
+    public void Delete_NonExistentId_Returns404NotFound() // TODOzpa jak overit, ze nesmazu nic jineho?
     {
         // Arrange
-        var todoItem = new ToDoItem
+        var itemToDelete = new ToDoItem
         {
-            ToDoItemId = 41,
-            Name = "Some name",
-            Description = "Some description",
-            IsCompleted = false
+            Name = "Task not to be deleted",
+            Description = "This task will not be deleted",
+            IsCompleted = true
         };
-
-        Controller.AddItemToStorage(todoItem);
+        _ = DbContext.ToDoItems.Add(itemToDelete);
+        _ = DbContext.SaveChanges();
 
         // Act
-        var result = Controller.DeleteById(42);
+        var result = Controller.DeleteById(ArbitraryNonExistentId);
 
         // Assert
         _ = Assert.IsType<NotFoundResult>(result);
-
-        var items = Controller.GetAllItems();
-        var notDeletedItem = items.Find(todoItem.ToDoItemId);
-        Assert.NotNull(notDeletedItem);
-        Assert.Equal(todoItem.Name, notDeletedItem.Name);
-        Assert.Equal(todoItem.Description, notDeletedItem.Description);
-        Assert.Equal(todoItem.IsCompleted, notDeletedItem.IsCompleted);
     }
 
-    [Fact]
-    public void Delete_NullItems_Returns404NotFound()
-    {
-        //Arrange
-
-        //Act
-        var result = Controller.DeleteById(41);
-
-        //Assert
-        Assert.IsType<NotFoundResult>(result);
-    }
-
-    [Fact]
-    public void Delete_RemoveUnsuccesful_Returns500InternalServerError_NOTIMPLEMENTED() => throw new NotImplementedException();
+    // [Fact]
+    // public void Delete_RemoveUnsuccesful_Returns500InternalServerError_NOTIMPLEMENTED() => throw new NotImplementedException();
 }

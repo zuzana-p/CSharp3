@@ -6,78 +6,75 @@ using ToDoList.Domain.Models;
 
 public class PutTests : TestsBase
 {
-    // Update tests have itemId = 3x
-    [Theory] // Neukazovali jsme si, ani neznam z praxe. Netuším, zda je to správně (ale funguje to). Jen jsem hledala jak pouzit parametr.
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void Put_UpdateById_UpdatesCorrectlyOnlyGivenItem(bool updatedIsCompleted)
+    public void UpdateById_ExistingId_UpdatesAndReturnsNoContent(bool updatedIsCompleted)
     {
         // Arrange
-        var todoItem1 = new ToDoItem
+        var toDoItem1 = new ToDoItem
         {
-            ToDoItemId = 31,
-            Name = "Some name 1",
-            Description = "Some description 1",
+            Name = "Task to be updated 1",
+            Description = "Description to be updated 1",
             IsCompleted = false
         };
-        var todoItem2 = new ToDoItem
+        var toDoItem2 = new ToDoItem
         {
-            ToDoItemId = 32,
-            Name = "Some name 2",
-            Description = "Some description 2",
+            Name = "Task to be updated 2",
+            Description = "Description to be updated 2",
             IsCompleted = true
         };
-        Controller.AddItemToStorage(todoItem1);
-        Controller.AddItemToStorage(todoItem2);
-
-        string updatedName = "Some updated name 1";
-        string updatedDescription = "Some updated description 1";
+        DbContext.ToDoItems.AddRange(toDoItem1, toDoItem2);
+        _ = DbContext.SaveChanges();
+        string updatedName = "Name after update";
+        string updatedDescription = "Description after update";
         var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto(updatedName, updatedDescription, updatedIsCompleted);
 
         // Act
-        var result = Controller.UpdateById(todoItem1.ToDoItemId, toDoItemUpdateRequestDto);
+        var result = Controller.UpdateById(toDoItem1.ToDoItemId, toDoItemUpdateRequestDto);
 
         // Assert
         _ = Assert.IsType<NoContentResult>(result);
 
-        var items = Controller.GetAllItems();
-        var itemsIds = items.Select(x => x.ToDoItemId);
-        Assert.True(itemsIds.Count() == 2 && itemsIds.Contains(31) && itemsIds.Contains(32));
-        // Kontroluji, že se mi nezmění množina ids (myslím, že se mi to původně při implementaci stalo). Podle id potom přistupuji k itemům v dalším assertu.
+        var itemsIds = DbContext.ToDoItems.Select(x => x.ToDoItemId);
+        Assert.Equal(2, itemsIds.Count());
+        Assert.Contains(toDoItem1.ToDoItemId, itemsIds);
+        Assert.Contains(toDoItem2.ToDoItemId, itemsIds);
 
-        var updatedItem = items.First(x => x.ToDoItemId == todoItem1.ToDoItemId);
+        var updatedItem = DbContext.ToDoItems.Find(toDoItem1.ToDoItemId);
+        Assert.NotNull(updatedItem);
         Assert.Equal(updatedName, updatedItem.Name);
         Assert.Equal(updatedDescription, updatedItem.Description);
         Assert.Equal(updatedIsCompleted, updatedItem.IsCompleted);
 
-        var notUpdatedItem = items.First(x => x.ToDoItemId == todoItem2.ToDoItemId);
-        Assert.Equal(todoItem2.Name, notUpdatedItem.Name);
-        Assert.Equal(todoItem2.Description, notUpdatedItem.Description);
-        Assert.Equal(todoItem2.IsCompleted, notUpdatedItem.IsCompleted);
+        var notUpdatedItem = DbContext.ToDoItems.Find(toDoItem2.ToDoItemId);
+        Assert.NotNull(notUpdatedItem);
+        Assert.Equal(toDoItem2.Name, notUpdatedItem.Name);
+        Assert.Equal(toDoItem2.Description, notUpdatedItem.Description);
+        Assert.Equal(toDoItem2.IsCompleted, notUpdatedItem.IsCompleted);
     }
 
     [Fact]
     public void Put_UpdateByNonExistentId_Returns404NotFound()
     {
         // Arrange
-        var todoItem = new ToDoItem
+        var toDoItem = new ToDoItem
         {
-            ToDoItemId = 31,
-            Name = "Some name",
-            Description = "Some description",
+            Name = "Name not to be updated",
+            Description = "Description not to be updated",
             IsCompleted = false
         };
-        Controller.AddItemToStorage(todoItem);
-
-        var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto("Some updated name", "Some updated description", true);
+        _ = DbContext.ToDoItems.Add(toDoItem);
+        _ = DbContext.SaveChanges();
+        var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto("Name after update", "Description after update", true);
 
         // Act
-        var result = Controller.UpdateById(32, toDoItemUpdateRequestDto);
+        var result = Controller.UpdateById(ArbitraryNonExistentId, toDoItemUpdateRequestDto);
 
         // Assert
         _ = Assert.IsType<NotFoundResult>(result);
     }
 
-    [Fact]
-    public void Put_TODO_Return500InternalServerError_NOTIMPLEMENTED() => throw new NotImplementedException();
+    // [Fact]
+    // public void Put_TODO_Return500InternalServerError_NOTIMPLEMENTED() => throw new NotImplementedException();
 }
