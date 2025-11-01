@@ -1,5 +1,9 @@
 namespace ToDoList.Test.IntegrationTests;
 
+using Microsoft.AspNetCore.Mvc;
+using ToDoList.Domain.DTOs;
+using ToDoList.Domain.Models;
+
 public class PutTests : TestsBase
 {
     [Theory]

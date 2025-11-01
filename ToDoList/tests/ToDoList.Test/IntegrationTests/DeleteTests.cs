@@ -1,5 +1,9 @@
 namespace ToDoList.Test.IntegrationTests;
 
+using Microsoft.AspNetCore.Mvc;
+using ToDoList.Domain.DTOs;
+using ToDoList.Domain.Models;
+
 public class DeleteTests : TestsBase
 {
     [Fact]
@@ -27,7 +31,7 @@ public class DeleteTests : TestsBase
         // Assert
         Assert.IsType<NoContentResult>(result);
         Assert.Null(DbContext.ToDoItems.Find(itemToDelete.ToDoItemId));
-        Assert.NotNull(DbContext.ToDoItems.Find(itemNotToDelete.ToDoItem));
+        Assert.NotNull(DbContext.ToDoItems.Find(itemNotToDelete.ToDoItemId));
     }
 
     [Fact]

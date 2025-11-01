@@ -1,5 +1,9 @@
 namespace ToDoList.Test.IntegrationTests;
 
+using Microsoft.EntityFrameworkCore;
+using ToDoList.Persistence;
+using ToDoList.WebApi;
+
 public class TestsBase : IDisposable
 {
     protected ToDoItemsContext DbContext { get; }
