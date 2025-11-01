@@ -1,8 +1,5 @@
 ﻿namespace ToDoList.Test.IntegrationTests;
 
-using Microsoft.AspNetCore.Mvc;
-using ToDoList.Domain.DTOs;
-using ToDoList.Domain.Models;
 
 public class GetTests : TestsBase
 {
@@ -23,7 +20,7 @@ public class GetTests : TestsBase
             IsCompleted = true
         };
         DbContext.ToDoItems.AddRange(toDoItem1, toDoItem2);
-        _ = DbContext.SaveChanges();
+        DbContext.SaveChanges();
 
         // Act
         var result = Controller.Read();
@@ -69,7 +66,7 @@ public class GetTests : TestsBase
             IsCompleted = true
         };
         DbContext.ToDoItems.AddRange(toDoItem1, toDoItem2);
-        _ = DbContext.SaveChanges();
+        DbContext.SaveChanges();
 
         // Act
         var result = Controller.ReadById(toDoItem1.ToDoItemId);
@@ -92,14 +89,13 @@ public class GetTests : TestsBase
             Description = "Description 1",
             IsCompleted = false
         };
-        _ = DbContext.ToDoItems.Add(toDoItem1);
-        _ = DbContext.SaveChanges();
+        DbContext.ToDoItems.Add(toDoItem1);
+        DbContext.SaveChanges();
 
         // Act
-        var result = Controller.ReadById(ArbitraryNonExistentId);
+        var result = Controller.ReadById(9999); // 9999 = nonexistent ID
 
         // Assert
-        _ = Assert.IsType<NotFoundResult>(result.Result);
+        Assert.IsType<NotFoundResult>(result.Result);
     }
-
 }

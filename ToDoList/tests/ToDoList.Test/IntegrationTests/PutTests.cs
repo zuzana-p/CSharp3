@@ -1,9 +1,5 @@
 namespace ToDoList.Test.IntegrationTests;
 
-using Microsoft.AspNetCore.Mvc;
-using ToDoList.Domain.DTOs;
-using ToDoList.Domain.Models;
-
 public class PutTests : TestsBase
 {
     [Theory]
@@ -25,7 +21,7 @@ public class PutTests : TestsBase
             IsCompleted = true
         };
         DbContext.ToDoItems.AddRange(toDoItem1, toDoItem2);
-        _ = DbContext.SaveChanges();
+        DbContext.SaveChanges();
         string updatedName = "Name after update";
         string updatedDescription = "Description after update";
         var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto(updatedName, updatedDescription, updatedIsCompleted);
@@ -34,7 +30,7 @@ public class PutTests : TestsBase
         var result = Controller.UpdateById(toDoItem1.ToDoItemId, toDoItemUpdateRequestDto);
 
         // Assert
-        _ = Assert.IsType<NoContentResult>(result);
+        Assert.IsType<NoContentResult>(result);
 
         var itemsIds = DbContext.ToDoItems.Select(x => x.ToDoItemId);
         Assert.Equal(2, itemsIds.Count());
@@ -64,15 +60,15 @@ public class PutTests : TestsBase
             Description = "Description not to be updated",
             IsCompleted = false
         };
-        _ = DbContext.ToDoItems.Add(toDoItem);
-        _ = DbContext.SaveChanges();
+        DbContext.ToDoItems.Add(toDoItem);
+        DbContext.SaveChanges();
         var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto("Name after update", "Description after update", true);
 
         // Act
-        var result = Controller.UpdateById(ArbitraryNonExistentId, toDoItemUpdateRequestDto);
+        var result = Controller.UpdateById(9999, toDoItemUpdateRequestDto); // 9999 = nonexistent ID
 
         // Assert
-        _ = Assert.IsType<NotFoundResult>(result);
+        Assert.IsType<NotFoundResult>(result);
     }
 
     // [Fact]

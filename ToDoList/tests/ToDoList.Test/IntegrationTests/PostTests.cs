@@ -1,14 +1,11 @@
 namespace ToDoList.Test.IntegrationTests;
 
-using Microsoft.AspNetCore.Mvc;
-using ToDoList.Domain.DTOs;
-
 public class PostTests : TestsBase
 {
-    [Theory] // Neukazovali jsme si, ani neznam z praxe. Netuším, zda je to správně (ale funguje to). Jen jsem hledala jak pouzit parametr.
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void Post_CreateItem_ReturnsCreatedAtAction(bool isCompleted) // TODOzpa prejmenovat
+    public void Post_CreateItem_ReturnsCreatedAtAction(bool isCompleted)
     {
         // Arrange
         string itemName = "Name of task";
