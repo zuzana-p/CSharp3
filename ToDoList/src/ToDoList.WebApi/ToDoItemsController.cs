@@ -3,36 +3,34 @@ namespace ToDoList.WebApi;
 using Microsoft.AspNetCore.Mvc;
 using ToDoList.Domain.DTOs;
 using ToDoList.Domain.Models;
+using ToDoList.Persistence;
 
 [Route("api/[controller]")] //localhost:5000/api/ToDoItems
 [ApiController]
-public class ToDoItemsController : ControllerBase
+public class ToDoItemsController(ToDoItemsContext dbContext) : ControllerBase
 {
-    private readonly List<ToDoItem> _items;
-
-    public ToDoItemsController()
-    {
-        _items = new List<ToDoItem>();
-    }
-
-    public ToDoItemsController(List<ToDoItem> items)
-    {
-        _items = items;
-    }
+    private readonly ToDoItemsContext dbContext = dbContext;
 
     [HttpPost]
-    public IActionResult Create(ToDoItemCreateRequestDto request)
+    public ActionResult<ToDoItemGetResponseDto> Create(ToDoItemCreateRequestDto request)
     {
         try
         {
             var toDoItem = request.ToDomain();
-            toDoItem.ToDoItemId = _items.Count != 0 ? _items.Max(x => x.ToDoItemId) + 1 : 1;
-            _items.Add(toDoItem);
-            return CreatedAtAction(
-                actionName: nameof(ReadById),
-                routeValues: new { toDoItemId = toDoItem.ToDoItemId },
-                value: new ToDoItemGetResponseDto(toDoItem)
-                );
+            dbContext.ToDoItems.Add(toDoItem);
+
+            if (dbContext.SaveChanges() == 1)
+            {
+                return CreatedAtAction(
+                    actionName: nameof(ReadById),
+                    routeValues: new { toDoItemId = toDoItem.ToDoItemId },
+                    value: new ToDoItemGetResponseDto(toDoItem)
+                    );
+            }
+            else
+            {
+                return Problem("Problem occured during create.", null, StatusCodes.Status500InternalServerError);
+            }
         }
         catch (Exception ex)
         {
@@ -41,17 +39,17 @@ public class ToDoItemsController : ControllerBase
     }
 
     [HttpGet]
-    public IActionResult Read()
+    public ActionResult<IEnumerable<ToDoItemGetResponseDto>> Read()
     {
         try
         {
-            if (_items == null)
+            if (!dbContext.ToDoItems.Any())
             {
                 return NotFound();
             }
             else
             {
-                return Ok(_items.Select(x => new ToDoItemGetResponseDto(x)).ToList());
+                return Ok(dbContext.ToDoItems.Select(x => new ToDoItemGetResponseDto(x)).ToList());
             }
         }
         catch (Exception ex)
@@ -61,11 +59,11 @@ public class ToDoItemsController : ControllerBase
     }
 
     [HttpGet("{todoItemId:int}")]
-    public IActionResult ReadById(int todoItemId)
+    public ActionResult<ToDoItemGetResponseDto> ReadById(int todoItemId)
     {
         try
         {
-            var item = _items.Find(x => x.ToDoItemId == todoItemId); // Q: Z toho co jsem dohledala Find není z LINQ. Ale podle zadání úkolu je. Jak to prosím je?
+            var item = dbContext.ToDoItems.Find(todoItemId);
 
             if (item == null)
             {
@@ -87,16 +85,24 @@ public class ToDoItemsController : ControllerBase
     {
         try
         {
-            if (_items.Any(x => x.ToDoItemId == todoItemId))
+            var toDoItem = dbContext.ToDoItems.Find(todoItemId);
+
+            if (toDoItem != null)
             {
-                int indexOfOriginalToDoItem = _items.FindIndex(x => x.ToDoItemId == todoItemId);
-                // Q: Nemůže se mi index pod rukama změnit? Např. při přístupu více lidí. (Následuji zadání k úkolu, proto přes FindIndex).
+                toDoItem.Name = request.Name;
+                toDoItem.Description = request.Description;
+                toDoItem.IsCompleted = request.IsCompleted;
 
-                var updatedToDoItem = request.ToDomain();
-                updatedToDoItem.ToDoItemId = todoItemId;
+                int savedRows = dbContext.SaveChanges();
 
-                _items[indexOfOriginalToDoItem] = updatedToDoItem;
-                return NoContent();
+                if (savedRows == 1)
+                {
+                    return NoContent();
+                }
+                else
+                {
+                    return Problem("Problem occured during udpate.", null, StatusCodes.Status500InternalServerError);
+                }
             }
             else
             {
@@ -115,17 +121,21 @@ public class ToDoItemsController : ControllerBase
     {
         try
         {
-            var toDoItemToDelete = _items.Find(x => x.ToDoItemId == todoItemId);
+            var toDoItemToDelete = dbContext.ToDoItems.Find(todoItemId);
 
-            if (toDoItemToDelete != null) // Find, protože následuji zadání k úkolu
+            if (toDoItemToDelete != null)
             {
-                if (_items.Remove(toDoItemToDelete))
+                dbContext.ToDoItems.Remove(toDoItemToDelete);
+
+                int savedRows = dbContext.SaveChanges();
+
+                if (savedRows == 1)
                 {
                     return NoContent();
                 }
                 else
                 {
-                    return Problem("Problem occured during deletion.", null, StatusCodes.Status500InternalServerError);
+                    return Problem("Problem occured during delete.", null, StatusCodes.Status500InternalServerError);
                 }
             }
             else
@@ -138,15 +148,4 @@ public class ToDoItemsController : ControllerBase
             return Problem(ex.Message, null, StatusCodes.Status500InternalServerError);
         }
     }
-
-    public void AddItemToStorage(ToDoItem item)
-    {
-        _items.Add(item);
-    }
-
-    public List<ToDoItem> GetAllItems()
-    {
-        return _items;
-    }
-
 }
