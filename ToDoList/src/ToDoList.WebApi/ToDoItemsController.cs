@@ -4,12 +4,14 @@ using Microsoft.AspNetCore.Mvc;
 using ToDoList.Domain.DTOs;
 using ToDoList.Domain.Models;
 using ToDoList.Persistence;
+using ToDoList.Persistence.Repositories;
 
 [Route("api/[controller]")] //localhost:5000/api/ToDoItems
 [ApiController]
-public class ToDoItemsController(ToDoItemsContext dbContext) : ControllerBase
+public class ToDoItemsController(ToDoItemsContext dbContext, IRepository<ToDoItem> repository) : ControllerBase
 {
     private readonly ToDoItemsContext dbContext = dbContext;
+    private readonly IRepository<ToDoItem> repository = repository;
 
     [HttpPost]
     public ActionResult<ToDoItemGetResponseDto> Create(ToDoItemCreateRequestDto request)
@@ -17,20 +19,26 @@ public class ToDoItemsController(ToDoItemsContext dbContext) : ControllerBase
         try
         {
             var toDoItem = request.ToDomain();
-            dbContext.ToDoItems.Add(toDoItem);
+            repository.Create(toDoItem);
 
-            if (dbContext.SaveChanges() == 1)
-            {
-                return CreatedAtAction(
-                    actionName: nameof(ReadById),
-                    routeValues: new { toDoItemId = toDoItem.ToDoItemId },
-                    value: new ToDoItemGetResponseDto(toDoItem)
-                    );
-            }
-            else
-            {
-                return Problem("Problem occured during create.", null, StatusCodes.Status500InternalServerError);
-            }
+            return CreatedAtAction(
+            actionName: nameof(ReadById),
+            routeValues: new { toDoItemId = toDoItem.ToDoItemId },
+            value: new ToDoItemGetResponseDto(toDoItem)
+            );
+
+            //if (dbContext.SaveChanges() == 1)
+            //{
+            //   return CreatedAtAction(
+            //        actionName: nameof(ReadById),
+            //        routeValues: new { toDoItemId = toDoItem.ToDoItemId },
+            //        value: new ToDoItemGetResponseDto(toDoItem)
+            //        );
+            //}
+            //else
+            //{
+            //    return Problem("Problem occured during create.", null, StatusCodes.Status500InternalServerError);
+            //}
         }
         catch (Exception ex)
         {
