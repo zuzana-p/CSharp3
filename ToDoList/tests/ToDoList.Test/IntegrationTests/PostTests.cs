@@ -2,7 +2,6 @@ namespace ToDoList.Test.IntegrationTests;
 
 using Microsoft.AspNetCore.Mvc;
 using ToDoList.Domain.DTOs;
-using ToDoList.Domain.Models;
 
 public class PostTests : TestsBase
 {
@@ -33,8 +32,4 @@ public class PostTests : TestsBase
         Assert.Equal(itemDescription, todoItemResponseDto.Description);
         Assert.Equal(isCompleted, todoItemResponseDto.IsCompleted);
     }
-
-    // [Fact]
-    // public void Post_TODO_Returns500InternalServerError_NOTIMPLEMENTED() => throw new NotImplementedException();
-
 }

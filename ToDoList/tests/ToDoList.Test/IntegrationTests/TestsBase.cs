@@ -2,6 +2,7 @@ namespace ToDoList.Test.IntegrationTests;
 
 using Microsoft.EntityFrameworkCore;
 using ToDoList.Persistence;
+using ToDoList.Persistence.Repositories;
 using ToDoList.WebApi;
 
 public class TestsBase : IDisposable
@@ -12,7 +13,8 @@ public class TestsBase : IDisposable
     public TestsBase()
     {
         DbContext = new("Data Source=../../../data/localdb_test.db");
-        Controller = new ToDoItemsController(DbContext, null); // TODOzpa odstranit null
+        var repository = new ToDoItemsRepository(DbContext);
+        Controller = new ToDoItemsController(repository);
     }
 
     public void Dispose()

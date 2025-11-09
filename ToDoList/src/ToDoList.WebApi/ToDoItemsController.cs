@@ -2,15 +2,14 @@ namespace ToDoList.WebApi;
 
 using Microsoft.AspNetCore.Mvc;
 using ToDoList.Domain.DTOs;
+using ToDoList.Domain.Exceptions;
 using ToDoList.Domain.Models;
-using ToDoList.Persistence;
 using ToDoList.Persistence.Repositories;
 
 [Route("api/[controller]")] //localhost:5000/api/ToDoItems
 [ApiController]
-public class ToDoItemsController(ToDoItemsContext dbContext, IRepository<ToDoItem> repository) : ControllerBase
+public class ToDoItemsController(IRepository<ToDoItem> repository) : ControllerBase
 {
-    private readonly ToDoItemsContext dbContext = dbContext;
     private readonly IRepository<ToDoItem> repository = repository;
 
     [HttpPost]
@@ -26,19 +25,6 @@ public class ToDoItemsController(ToDoItemsContext dbContext, IRepository<ToDoIte
             routeValues: new { toDoItemId = toDoItem.ToDoItemId },
             value: new ToDoItemGetResponseDto(toDoItem)
             );
-
-            //if (dbContext.SaveChanges() == 1)
-            //{
-            //   return CreatedAtAction(
-            //        actionName: nameof(ReadById),
-            //        routeValues: new { toDoItemId = toDoItem.ToDoItemId },
-            //        value: new ToDoItemGetResponseDto(toDoItem)
-            //        );
-            //}
-            //else
-            //{
-            //    return Problem("Problem occured during create.", null, StatusCodes.Status500InternalServerError);
-            //}
         }
         catch (Exception ex)
         {
@@ -51,13 +37,14 @@ public class ToDoItemsController(ToDoItemsContext dbContext, IRepository<ToDoIte
     {
         try
         {
-            if (!dbContext.ToDoItems.Any())
+            var toDoItems = repository.Read();
+            if (!toDoItems.Any())
             {
                 return NotFound();
             }
             else
             {
-                return Ok(dbContext.ToDoItems.Select(x => new ToDoItemGetResponseDto(x)).ToList());
+                return Ok(repository.Read().Select(x => new ToDoItemGetResponseDto(x)).ToList());
             }
         }
         catch (Exception ex)
@@ -67,11 +54,11 @@ public class ToDoItemsController(ToDoItemsContext dbContext, IRepository<ToDoIte
     }
 
     [HttpGet("{todoItemId:int}")]
-    public ActionResult<ToDoItemGetResponseDto> ReadById(int todoItemId)
+    public ActionResult<ToDoItemGetResponseDto> ReadById(int toDoItemId)
     {
         try
         {
-            var item = dbContext.ToDoItems.Find(todoItemId);
+            var item = repository.ReadById(toDoItemId);
 
             if (item == null)
             {
@@ -93,29 +80,13 @@ public class ToDoItemsController(ToDoItemsContext dbContext, IRepository<ToDoIte
     {
         try
         {
-            var toDoItem = dbContext.ToDoItems.Find(todoItemId);
-
-            if (toDoItem != null)
-            {
-                toDoItem.Name = request.Name;
-                toDoItem.Description = request.Description;
-                toDoItem.IsCompleted = request.IsCompleted;
-
-                int savedRows = dbContext.SaveChanges();
-
-                if (savedRows == 1)
-                {
-                    return NoContent();
-                }
-                else
-                {
-                    return Problem("Problem occured during udpate.", null, StatusCodes.Status500InternalServerError);
-                }
-            }
-            else
-            {
-                return NotFound();
-            }
+            var toDoItemValuesAfterUpdate = request.ToDomain();
+            repository.UpdateById(todoItemId, toDoItemValuesAfterUpdate);
+            return NoContent();
+        }
+        catch (EntityNotFoundException)
+        {
+            return NotFound();
         }
         catch (Exception ex)
         {
@@ -129,27 +100,12 @@ public class ToDoItemsController(ToDoItemsContext dbContext, IRepository<ToDoIte
     {
         try
         {
-            var toDoItemToDelete = dbContext.ToDoItems.Find(todoItemId);
-
-            if (toDoItemToDelete != null)
-            {
-                dbContext.ToDoItems.Remove(toDoItemToDelete);
-
-                int savedRows = dbContext.SaveChanges();
-
-                if (savedRows == 1)
-                {
-                    return NoContent();
-                }
-                else
-                {
-                    return Problem("Problem occured during delete.", null, StatusCodes.Status500InternalServerError);
-                }
-            }
-            else
-            {
-                return NotFound();
-            }
+            repository.DeleteById(todoItemId);
+            return NoContent();
+        }
+        catch (EntityNotFoundException)
+        {
+            return NotFound();
         }
         catch (Exception ex)
         {
