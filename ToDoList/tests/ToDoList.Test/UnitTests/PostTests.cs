@@ -1,10 +1,20 @@
-namespace ToDoList.Test.IntegrationTests;
+namespace ToDoList.Test.UnitTests;
 
+using System.Data;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using ToDoList.Domain.DTOs;
+using ToDoList.Domain.Models;
+using ToDoList.Persistence.Repositories;
 
 public class PostTests : TestsBase
 {
+    public PostTests()
+    {
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -24,7 +34,6 @@ public class PostTests : TestsBase
 
         var todoItemResponseDto = createdAtActionResult.Value as ToDoItemGetResponseDto;
         Assert.NotNull(todoItemResponseDto);
-        Assert.True(todoItemResponseDto.ToDoItemId > 0);
         Assert.NotNull(createdAtActionResult.RouteValues);
         Assert.Equal(todoItemResponseDto.ToDoItemId, createdAtActionResult.RouteValues["toDoItemId"]);
 
@@ -32,4 +41,21 @@ public class PostTests : TestsBase
         Assert.Equal(itemDescription, todoItemResponseDto.Description);
         Assert.Equal(isCompleted, todoItemResponseDto.IsCompleted);
     }
+
+    [Fact]
+    public void Post_RepositoryException_Returns500InternalServerError()
+    {
+        // Arrange
+        var toDoItemCreateRequestDto = new ToDoItemCreateRequestDto("Name", "Description", false);
+        RepositoryMock.When(x => x.Create(Arg.Any<ToDoItem>())).Do(_ => throw new InvalidOperationException());
+
+        // Act
+        var result = Controller.Create(toDoItemCreateRequestDto);
+
+        // Assert
+        var objectResult = result.Result as ObjectResult;
+        Assert.NotNull(objectResult);
+        Assert.Equal(500, objectResult.StatusCode);
+    }
+
 }

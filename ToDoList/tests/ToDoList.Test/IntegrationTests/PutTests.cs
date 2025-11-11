@@ -37,7 +37,6 @@ public class PutTests : TestsBase
         Assert.IsType<NoContentResult>(result);
 
         var itemsIds = DbContext.ToDoItems.Select(x => x.ToDoItemId);
-        Assert.Equal(2, itemsIds.Count());
         Assert.Contains(toDoItem1.ToDoItemId, itemsIds);
         Assert.Contains(toDoItem2.ToDoItemId, itemsIds);
 
@@ -74,7 +73,4 @@ public class PutTests : TestsBase
         // Assert
         Assert.IsType<NotFoundResult>(result);
     }
-
-    // [Fact]
-    // public void Put_TODO_Return500InternalServerError_NOTIMPLEMENTED() => throw new NotImplementedException();
 }

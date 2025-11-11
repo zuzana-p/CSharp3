@@ -1,7 +1,6 @@
 namespace ToDoList.Test.IntegrationTests;
 
 using Microsoft.AspNetCore.Mvc;
-using ToDoList.Domain.DTOs;
 using ToDoList.Domain.Models;
 
 public class DeleteTests : TestsBase
@@ -53,7 +52,4 @@ public class DeleteTests : TestsBase
         // Assert
         Assert.IsType<NotFoundResult>(result);
     }
-
-    // [Fact]
-    // public void Delete_RemoveUnsuccesful_Returns500InternalServerError_NOTIMPLEMENTED() => throw new NotImplementedException();
 }

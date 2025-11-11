@@ -1,8 +1,11 @@
-﻿namespace ToDoList.Test.IntegrationTests;
+namespace ToDoList.Test.UnitTests;
 
+using System.Data;
 using Microsoft.AspNetCore.Mvc;
+using NSubstitute;
 using ToDoList.Domain.DTOs;
 using ToDoList.Domain.Models;
+using ToDoList.Test.IntegrationTests;
 
 public class GetTests : TestsBase
 {
@@ -12,18 +15,19 @@ public class GetTests : TestsBase
         // Arrange
         var toDoItem1 = new ToDoItem
         {
+            ToDoItemId = 1,
             Name = "Name of task 1",
             Description = "Description 1",
             IsCompleted = false
         };
         var toDoItem2 = new ToDoItem
         {
+            ToDoItemId = 2,
             Name = "Name of task 2",
             Description = "Description 2",
             IsCompleted = true
         };
-        DbContext.ToDoItems.AddRange(toDoItem1, toDoItem2);
-        DbContext.SaveChanges();
+        RepositoryMock.Read().Returns([toDoItem1, toDoItem2]);
 
         // Act
         var result = Controller.Read();
@@ -47,23 +51,44 @@ public class GetTests : TestsBase
     }
 
     [Fact]
+    public void Get_NoItems_Returns404NotFound()
+    {
+        // Arrange
+
+        //Act
+        var result = Controller.Read();
+
+        // Assert
+        Assert.IsType<NotFoundResult>(result.Result);
+    }
+
+    [Fact]
+    public void Get_RepositoryException_Returns500InternalServerError()
+    {
+        // Arrange
+        RepositoryMock.When(x => x.Read()).Do(x => throw new InvalidOperationException());
+
+        // Act
+        var result = Controller.Read();
+
+        // Assert
+        var objectResult = result.Result as ObjectResult;
+        Assert.NotNull(objectResult);
+        Assert.Equal(500, objectResult.StatusCode);
+    }
+
+    [Fact]
     public void GetById_ItemId_ReturnsItem()
     {
         // Arrange
         var toDoItem1 = new ToDoItem
         {
+            ToDoItemId = 1,
             Name = "Name of task 1",
             Description = "Description 1",
             IsCompleted = false
         };
-        var toDoItem2 = new ToDoItem
-        {
-            Name = "Name of task 2",
-            Description = "Description 2",
-            IsCompleted = true
-        };
-        DbContext.ToDoItems.AddRange(toDoItem1, toDoItem2);
-        DbContext.SaveChanges();
+        RepositoryMock.ReadById(1).Returns(toDoItem1);
 
         // Act
         var result = Controller.ReadById(toDoItem1.ToDoItemId);
@@ -80,17 +105,10 @@ public class GetTests : TestsBase
     public void GetById_NonExistenstId_Returns404NotFound()
     {
         // Arrange
-        var toDoItem1 = new ToDoItem
-        {
-            Name = "Name of task 1",
-            Description = "Description 1",
-            IsCompleted = false
-        };
-        DbContext.ToDoItems.Add(toDoItem1);
-        DbContext.SaveChanges();
+        RepositoryMock.ReadById(999).Returns(null as ToDoItem);
 
         // Act
-        var result = Controller.ReadById(9999); // 9999 = nonexistent ID
+        var result = Controller.ReadById(999);
 
         // Assert
         Assert.IsType<NotFoundResult>(result.Result);
