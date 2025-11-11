@@ -5,7 +5,7 @@ using ToDoList.Domain.Models;
 using ToDoList.Persistence.Repositories;
 using ToDoList.WebApi;
 
-public class TestsBase : IDisposable
+public class TestsBase
 {
     protected ToDoItemsController Controller { get; }
     protected IRepository<ToDoItem> RepositoryMock;
@@ -15,6 +15,4 @@ public class TestsBase : IDisposable
         RepositoryMock = Substitute.For<IRepository<ToDoItem>>();
         Controller = new ToDoItemsController(RepositoryMock);
     }
-
-    public void Dispose() { }
 }
