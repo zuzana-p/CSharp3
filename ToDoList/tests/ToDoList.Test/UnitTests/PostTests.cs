@@ -1,13 +1,10 @@
 namespace ToDoList.Test.UnitTests;
 
-using System.Data;
-using Microsoft.AspNetCore.Http.HttpResults;
+using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
-using NSubstitute.ExceptionExtensions;
 using ToDoList.Domain.DTOs;
 using ToDoList.Domain.Models;
-using ToDoList.Persistence.Repositories;
 
 public class PostTests : TestsBase
 {
@@ -18,7 +15,7 @@ public class PostTests : TestsBase
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void Post_CreateItem_ReturnsCreatedAtAction(bool isCompleted)
+    public void Post_CreateValidRequest_ReturnsCreatedAtAction(bool isCompleted)
     {
         // Arrange
         string itemName = "Name of task";
@@ -29,21 +26,27 @@ public class PostTests : TestsBase
         var result = Controller.Create(toDoItemCreateRequestDto);
 
         // Assert
+        RepositoryMock.Received(1).Create(Arg.Any<ToDoItem>());
+
         var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result.Result);
-        Assert.Equal("ReadById", createdAtActionResult.ActionName);
+        createdAtActionResult.ActionName.Should().Be("ReadById");
 
         var todoItemResponseDto = createdAtActionResult.Value as ToDoItemGetResponseDto;
-        Assert.NotNull(todoItemResponseDto);
-        Assert.NotNull(createdAtActionResult.RouteValues);
-        Assert.Equal(todoItemResponseDto.ToDoItemId, createdAtActionResult.RouteValues["toDoItemId"]);
+        todoItemResponseDto.Should().NotBeNull();
 
-        Assert.Equal(itemName, todoItemResponseDto.Name);
-        Assert.Equal(itemDescription, todoItemResponseDto.Description);
-        Assert.Equal(isCompleted, todoItemResponseDto.IsCompleted);
+        createdAtActionResult.RouteValues.Should().NotBeNull();
+        createdAtActionResult.RouteValues["toDoItemId"].Should().Be(todoItemResponseDto.ToDoItemId);
+
+        todoItemResponseDto.Should().BeEquivalentTo(new
+        {
+            Name = itemName,
+            Description = itemDescription,
+            IsCompleted = isCompleted
+        });
     }
 
     [Fact]
-    public void Post_RepositoryException_Returns500InternalServerError()
+    public void Post_CreateUnhandledException_ReturnsInternalServerError()
     {
         // Arrange
         var toDoItemCreateRequestDto = new ToDoItemCreateRequestDto("Name", "Description", false);
@@ -53,9 +56,11 @@ public class PostTests : TestsBase
         var result = Controller.Create(toDoItemCreateRequestDto);
 
         // Assert
+        RepositoryMock.Received(1).Create(Arg.Any<ToDoItem>());
+
         var objectResult = result.Result as ObjectResult;
-        Assert.NotNull(objectResult);
-        Assert.Equal(500, objectResult.StatusCode);
+        objectResult.Should().NotBeNull();
+        objectResult.StatusCode.Should().Be(500);
     }
 
 }

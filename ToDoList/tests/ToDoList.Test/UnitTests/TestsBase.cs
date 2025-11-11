@@ -8,7 +8,7 @@ using ToDoList.WebApi;
 public class TestsBase
 {
     protected ToDoItemsController Controller { get; }
-    protected IRepository<ToDoItem> RepositoryMock;
+    protected IRepository<ToDoItem> RepositoryMock { get; }
 
     public TestsBase()
     {
