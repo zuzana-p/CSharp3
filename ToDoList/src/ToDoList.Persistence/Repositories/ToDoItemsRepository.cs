@@ -25,7 +25,7 @@ public class ToDoItemsRepository(ToDoItemsContext dbContext) : IRepository<ToDoI
 
         if (toDoItem != null)
         {
-            toDoItem.Name = toDoItemValuesAfterUpdate.Name;
+            toDoItem.Name = toDoItemValuesAfterUpdate.Name; // noteZPA Context.Entry(foundItem).CurrentValues.SetValues(item)
             toDoItem.Description = toDoItemValuesAfterUpdate.Description;
             toDoItem.IsCompleted = toDoItemValuesAfterUpdate.IsCompleted;
 

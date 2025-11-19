@@ -1,6 +1,7 @@
 namespace ToDoList.Test.UnitTests;
 
 using System.Data;
+using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
 using ToDoList.Domain.DTOs;
@@ -10,7 +11,7 @@ using ToDoList.Test.IntegrationTests;
 public class GetTests : TestsBase
 {
     [Fact]
-    public void Get_AllItems_ReturnsAllItems()
+    public void Get_ReadWhenSomeItemAvailable_ReturnsOk()
     {
         // Arrange
         var toDoItem1 = new ToDoItem
@@ -20,38 +21,23 @@ public class GetTests : TestsBase
             Description = "Description 1",
             IsCompleted = false
         };
-        var toDoItem2 = new ToDoItem
-        {
-            ToDoItemId = 2,
-            Name = "Name of task 2",
-            Description = "Description 2",
-            IsCompleted = true
-        };
-        RepositoryMock.Read().Returns([toDoItem1, toDoItem2]);
+        RepositoryMock.Read().Returns([toDoItem1]);
 
         // Act
         var result = Controller.Read();
 
         // Assert
+        RepositoryMock.Received(1).Read();
+
         var dtoResult = Assert.IsType<List<ToDoItemGetResponseDto>>(result.GetValue());
 
         var returnedToDoItem1 = dtoResult.Find(x => x.ToDoItemId == toDoItem1.ToDoItemId);
-        Assert.NotNull(returnedToDoItem1);
-        Assert.Equal(toDoItem1.ToDoItemId, returnedToDoItem1.ToDoItemId);
-        Assert.Equal(toDoItem1.Name, returnedToDoItem1.Name);
-        Assert.Equal(toDoItem1.Description, returnedToDoItem1.Description);
-        Assert.Equal(toDoItem1.IsCompleted, returnedToDoItem1.IsCompleted);
-
-        var returnedToDoItem2 = dtoResult.Find(x => x.ToDoItemId == toDoItem2.ToDoItemId);
-        Assert.NotNull(returnedToDoItem2);
-        Assert.Equal(toDoItem2.ToDoItemId, returnedToDoItem2.ToDoItemId);
-        Assert.Equal(toDoItem2.Name, returnedToDoItem2.Name);
-        Assert.Equal(toDoItem2.Description, returnedToDoItem2.Description);
-        Assert.Equal(toDoItem2.IsCompleted, returnedToDoItem2.IsCompleted);
+        returnedToDoItem1.Should().NotBeNull();
+        returnedToDoItem1.Should().BeEquivalentTo(toDoItem1);
     }
 
     [Fact]
-    public void Get_NoItems_Returns404NotFound()
+    public void Get_ReadWhenNoItemAvailable_ReturnsNotFound()
     {
         // Arrange
 
@@ -59,11 +45,13 @@ public class GetTests : TestsBase
         var result = Controller.Read();
 
         // Assert
-        Assert.IsType<NotFoundResult>(result.Result);
+        RepositoryMock.Received(1).Read();
+
+        result.Result.Should().BeOfType<NotFoundResult>();
     }
 
     [Fact]
-    public void Get_RepositoryException_Returns500InternalServerError()
+    public void Get_ReadUnhandledException_ReturnsInternalServerError()
     {
         // Arrange
         RepositoryMock.When(x => x.Read()).Do(x => throw new InvalidOperationException());
@@ -72,13 +60,15 @@ public class GetTests : TestsBase
         var result = Controller.Read();
 
         // Assert
+        RepositoryMock.Received(1).Read();
+
         var objectResult = result.Result as ObjectResult;
-        Assert.NotNull(objectResult);
-        Assert.Equal(500, objectResult.StatusCode);
+        objectResult.Should().NotBeNull();
+        objectResult.StatusCode.Should().Be(500);
     }
 
     [Fact]
-    public void GetById_ItemId_ReturnsItem()
+    public void Get_ReadByIdWhenSomeItemAvailable_ReturnsOk()
     {
         // Arrange
         var toDoItem1 = new ToDoItem
@@ -94,15 +84,14 @@ public class GetTests : TestsBase
         var result = Controller.ReadById(toDoItem1.ToDoItemId);
 
         // Assert
+        RepositoryMock.Received(1).ReadById(1);
+
         var dtoResult = Assert.IsType<ToDoItemGetResponseDto>(result.GetValue());
-        Assert.Equal(toDoItem1.ToDoItemId, dtoResult.ToDoItemId);
-        Assert.Equal(toDoItem1.Name, dtoResult.Name);
-        Assert.Equal(toDoItem1.Description, dtoResult.Description);
-        Assert.Equal(toDoItem1.IsCompleted, dtoResult.IsCompleted);
+        dtoResult.Should().BeEquivalentTo(toDoItem1);
     }
 
     [Fact]
-    public void GetById_NonExistenstId_Returns404NotFound()
+    public void Get_ReadByIdWhenItemIsNull_ReturnsNotFound()
     {
         // Arrange
         RepositoryMock.ReadById(999).Returns(null as ToDoItem);
@@ -111,6 +100,26 @@ public class GetTests : TestsBase
         var result = Controller.ReadById(999);
 
         // Assert
-        Assert.IsType<NotFoundResult>(result.Result);
+        RepositoryMock.Received(1).ReadById(999);
+
+        result.Result.Should().BeOfType<NotFoundResult>();
+
+    }
+
+    [Fact]
+    public void Get_ReadByIdUnhandledException_ReturnsInternalServerError()
+    {
+        // Arrange
+        RepositoryMock.When(x => x.ReadById(1)).Do(x => throw new InvalidOperationException());
+
+        // Act
+        var result = Controller.ReadById(1);
+
+        // Assert
+        RepositoryMock.Received(1).ReadById(1);
+
+        var objectResult = result.Result as ObjectResult;
+        objectResult.Should().NotBeNull();
+        objectResult.StatusCode.Should().Be(500);
     }
 }

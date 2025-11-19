@@ -44,7 +44,7 @@ public class ToDoItemsController(IRepository<ToDoItem> repository) : ControllerB
             }
             else
             {
-                return Ok(repository.Read().Select(x => new ToDoItemGetResponseDto(x)).ToList());
+                return Ok(toDoItems.Select(x => new ToDoItemGetResponseDto(x)).ToList());
             }
         }
         catch (Exception ex)
