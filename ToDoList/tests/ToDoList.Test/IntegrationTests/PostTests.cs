@@ -8,7 +8,7 @@ public class PostTests : TestsBase
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void Post_CreateItem_ReturnsCreatedAtAction(bool isCompleted)
+    public async Task Post_CreateItem_ReturnsCreatedAtAction_Async(bool isCompleted)
     {
         // Arrange
         string itemName = "Name of task";
@@ -16,11 +16,11 @@ public class PostTests : TestsBase
         var toDoItemCreateRequestDto = new ToDoItemCreateRequestDto(itemName, itemDescription, isCompleted);
 
         // Act
-        var result = Controller.Create(toDoItemCreateRequestDto);
+        var result = await Controller.CreateAsync(toDoItemCreateRequestDto);
 
         // Assert
         var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result.Result);
-        Assert.Equal("ReadById", createdAtActionResult.ActionName);
+        Assert.Equal("ReadByIdAsync", createdAtActionResult.ActionName);
 
         var todoItemResponseDto = createdAtActionResult.Value as ToDoItemGetResponseDto;
         Assert.NotNull(todoItemResponseDto);

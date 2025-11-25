@@ -9,45 +9,45 @@ using ToDoList.Domain.Models;
 public class DeleteTests : TestsBase
 {
     [Fact]
-    public void Delete_DeleteByIdValidItemId_ReturnsNoContent()
+    public async Task Delete_DeleteByIdValidItemId_ReturnsNoContent_Async()
     {
         // Arrange
 
         // Act
-        var result = Controller.DeleteById(1);
+        var result = await Controller.DeleteByIdAsync(1);
 
         // Assert
-        RepositoryMock.Received(1).DeleteById(1);
+        await RepositoryMock.Received(1).DeleteByIdAsync(1);
 
         result.Should().BeOfType<NoContentResult>();
     }
 
     [Fact]
-    public void Delete_DeleteByIdInvalidItemId_ReturnsNotFound()
+    public async Task Delete_DeleteByIdInvalidItemId_ReturnsNotFound_Async()
     {
         // Arrange
-        RepositoryMock.When(x => x.DeleteById(999)).Do(x => throw new EntityNotFoundException(nameof(ToDoItem), 999));
+        RepositoryMock.When(x => x.DeleteByIdAsync(999)).Do(x => throw new EntityNotFoundException(nameof(ToDoItem), 999));
 
         // Act
-        var result = Controller.DeleteById(999);
+        var result = await Controller.DeleteByIdAsync(999);
 
         // Assert
-        RepositoryMock.Received(1).DeleteById(999);
+        await RepositoryMock.Received(1).DeleteByIdAsync(999);
 
         result.Should().BeOfType<NotFoundResult>();
     }
 
     [Fact]
-    public void Delete_DeleteByIdUnhandledException_ReturnsInternalServerError()
+    public async Task Delete_DeleteByIdUnhandledException_ReturnsInternalServerError_Async()
     {
         // Arrange
-        RepositoryMock.When(x => x.DeleteById(1)).Do(x => throw new InvalidOperationException());
+        RepositoryMock.When(x => x.DeleteByIdAsync(1)).Do(x => throw new InvalidOperationException());
 
         // Act
-        var result = Controller.DeleteById(1);
+        var result = await Controller.DeleteByIdAsync(1);
 
         // Assert
-        RepositoryMock.Received(1).DeleteById(1);
+        await RepositoryMock.Received(1).DeleteByIdAsync(1);
 
         var objectResult = result as ObjectResult;
         objectResult.Should().NotBeNull();

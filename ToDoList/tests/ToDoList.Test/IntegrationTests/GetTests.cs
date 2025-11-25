@@ -7,7 +7,7 @@ using ToDoList.Domain.Models;
 public class GetTests : TestsBase
 {
     [Fact]
-    public void Get_AllItems_ReturnsAllItems()
+    public async Task Get_AllItems_ReturnsAllItems_Async()
     {
         // Arrange
         var toDoItem1 = new ToDoItem
@@ -22,11 +22,11 @@ public class GetTests : TestsBase
             Description = "Description 2",
             IsCompleted = true
         };
-        DbContext.ToDoItems.AddRange(toDoItem1, toDoItem2);
-        DbContext.SaveChanges();
+        await DbContext.ToDoItems.AddRangeAsync(toDoItem1, toDoItem2);
+        await DbContext.SaveChangesAsync();
 
         // Act
-        var result = Controller.Read();
+        var result = await Controller.ReadAsync();
 
         // Assert
         var dtoResult = Assert.IsType<List<ToDoItemGetResponseDto>>(result.GetValue());
@@ -47,7 +47,7 @@ public class GetTests : TestsBase
     }
 
     [Fact]
-    public void GetById_ItemId_ReturnsItem()
+    public async Task GetById_ItemId_ReturnsItem_Async()
     {
         // Arrange
         var toDoItem1 = new ToDoItem
@@ -62,11 +62,11 @@ public class GetTests : TestsBase
             Description = "Description 2",
             IsCompleted = true
         };
-        DbContext.ToDoItems.AddRange(toDoItem1, toDoItem2);
-        DbContext.SaveChanges();
+        await DbContext.ToDoItems.AddRangeAsync(toDoItem1, toDoItem2);
+        await DbContext.SaveChangesAsync();
 
         // Act
-        var result = Controller.ReadById(toDoItem1.ToDoItemId);
+        var result = await Controller.ReadByIdAsync(toDoItem1.ToDoItemId);
 
         // Assert
         var dtoResult = Assert.IsType<ToDoItemGetResponseDto>(result.GetValue());
@@ -77,7 +77,7 @@ public class GetTests : TestsBase
     }
 
     [Fact]
-    public void GetById_NonExistenstId_Returns404NotFound()
+    public async Task GetById_NonExistenstId_Returns404NotFound_Async()
     {
         // Arrange
         var toDoItem1 = new ToDoItem
@@ -86,11 +86,11 @@ public class GetTests : TestsBase
             Description = "Description 1",
             IsCompleted = false
         };
-        DbContext.ToDoItems.Add(toDoItem1);
-        DbContext.SaveChanges();
+        await DbContext.ToDoItems.AddAsync(toDoItem1);
+        await DbContext.SaveChangesAsync();
 
         // Act
-        var result = Controller.ReadById(9999); // 9999 = nonexistent ID
+        var result = await Controller.ReadByIdAsync(9999); // 9999 = nonexistent ID
 
         // Assert
         Assert.IsType<NotFoundResult>(result.Result);

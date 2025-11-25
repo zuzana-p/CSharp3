@@ -6,7 +6,7 @@ using ToDoList.Domain.Models;
 public class DeleteTests : TestsBase
 {
     [Fact]
-    public void DeleteDeleteById_ExistingId_DeletesOnlyTheOneItem()
+    public async Task DeleteDeleteById_ExistingId_DeletesOnlyTheOneItem_Async()
     {
         // Arrange
         var itemToDelete = new ToDoItem
@@ -21,11 +21,11 @@ public class DeleteTests : TestsBase
             Description = "This task will not be deleted",
             IsCompleted = true
         };
-        DbContext.ToDoItems.AddRange(itemToDelete, itemNotToDelete);
-        DbContext.SaveChanges();
+        await DbContext.ToDoItems.AddRangeAsync(itemToDelete, itemNotToDelete);
+        await DbContext.SaveChangesAsync();
 
         // Act
-        var result = Controller.DeleteById(itemToDelete.ToDoItemId);
+        var result = await Controller.DeleteByIdAsync(itemToDelete.ToDoItemId);
 
         // Assert
         Assert.IsType<NoContentResult>(result);
@@ -34,7 +34,7 @@ public class DeleteTests : TestsBase
     }
 
     [Fact]
-    public void Delete_NonExistentId_Returns404NotFound()
+    public async Task Delete_NonExistentId_Returns404NotFound_Async()
     {
         // Arrange
         var itemToDelete = new ToDoItem
@@ -43,11 +43,11 @@ public class DeleteTests : TestsBase
             Description = "This task will not be deleted",
             IsCompleted = true
         };
-        DbContext.ToDoItems.Add(itemToDelete);
-        DbContext.SaveChanges();
+        await DbContext.ToDoItems.AddAsync(itemToDelete);
+        await DbContext.SaveChangesAsync();
 
         // Act
-        var result = Controller.DeleteById(9999); // 9999 = nonexistent ID
+        var result = await Controller.DeleteByIdAsync(9999); // 9999 = nonexistent ID
 
         // Assert
         Assert.IsType<NotFoundResult>(result);

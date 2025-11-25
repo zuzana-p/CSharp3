@@ -1,27 +1,32 @@
 namespace ToDoList.Persistence.Repositories;
 
-using System.Data;
+using Microsoft.EntityFrameworkCore;
 using ToDoList.Domain.Exceptions;
 using ToDoList.Domain.Models;
 
 
-public class ToDoItemsRepository(ToDoItemsContext dbContext) : IRepository<ToDoItem>
+public class ToDoItemsRepository : IRepositoryAsync<ToDoItem>
 {
-    private readonly ToDoItemsContext dbContext = dbContext;
+    private readonly ToDoItemsContext dbContext;
 
-    public void Create(ToDoItem item)
+    public ToDoItemsRepository(ToDoItemsContext dbContext)
     {
-        dbContext.Add(item);
-        dbContext.SaveChanges();
+        this.dbContext = dbContext;
     }
 
-    public IEnumerable<ToDoItem> Read() => [.. dbContext.ToDoItems];
-
-    public ToDoItem? ReadById(int id) => dbContext.ToDoItems.Find(id);
-
-    public void UpdateById(int id, ToDoItem toDoItemValuesAfterUpdate)
+    public async Task CreateAsync(ToDoItem item)
     {
-        var toDoItem = dbContext.ToDoItems.Find(id);
+        await dbContext.AddAsync(item);
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<ToDoItem>> ReadAsync() => await dbContext.ToDoItems.ToListAsync();
+
+    public async Task<ToDoItem?> ReadByIdAsync(int id) => await dbContext.ToDoItems.FindAsync(id);
+
+    public async Task UpdateByIdAsync(int id, ToDoItem toDoItemValuesAfterUpdate)
+    {
+        var toDoItem = await dbContext.ToDoItems.FindAsync(id);
 
         if (toDoItem != null)
         {
@@ -29,7 +34,7 @@ public class ToDoItemsRepository(ToDoItemsContext dbContext) : IRepository<ToDoI
             toDoItem.Description = toDoItemValuesAfterUpdate.Description;
             toDoItem.IsCompleted = toDoItemValuesAfterUpdate.IsCompleted;
 
-            dbContext.SaveChanges();
+            await dbContext.SaveChangesAsync();
         }
         else
         {
@@ -37,14 +42,14 @@ public class ToDoItemsRepository(ToDoItemsContext dbContext) : IRepository<ToDoI
         }
     }
 
-    public void DeleteById(int id)
+    public async Task DeleteByIdAsync(int id)
     {
-        var toDoItemToDelete = dbContext.ToDoItems.Find(id);
+        var toDoItemToDelete = await dbContext.ToDoItems.FindAsync(id);
 
         if (toDoItemToDelete != null)
         {
             dbContext.ToDoItems.Remove(toDoItemToDelete);
-            dbContext.SaveChanges();
+            await dbContext.SaveChangesAsync();
         }
         else
         {

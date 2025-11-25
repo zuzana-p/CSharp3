@@ -1,4 +1,7 @@
-﻿@using ToDoList.Frontend.Models
+﻿@using ToDoList.Frontend.Clients
+@using ToDoList.Frontend.Models
+
+@inject IToDoItemsClient toDoItemsClient;
 
 <div>
     <h2>ToDo Items Dashboard</h2>
@@ -81,9 +84,9 @@ new ToDoItemView(5, "Přečíst knihu", "Kapitola 5", true)
 
     private List<ToDoItemView> sortedData = new();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        sortedData = testData.ToList();
+        sortedData = await toDoItemsClient.ReadItemsAsync();
     }
 
     bool sortAscendingById = false;

@@ -9,7 +9,7 @@ public class PutTests : TestsBase
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void UpdateById_ExistingId_UpdatesAndReturnsNoContent(bool updatedIsCompleted)
+    public async Task UpdateById_ExistingId_UpdatesAndReturnsNoContent_Async(bool updatedIsCompleted)
     {
         // Arrange
         var toDoItem1 = new ToDoItem
@@ -24,14 +24,15 @@ public class PutTests : TestsBase
             Description = "Description to be updated 2",
             IsCompleted = true
         };
-        DbContext.ToDoItems.AddRange(toDoItem1, toDoItem2);
-        DbContext.SaveChanges();
+        await DbContext.ToDoItems.AddRangeAsync(toDoItem1, toDoItem2);
+        await DbContext.SaveChangesAsync();
+
         string updatedName = "Name after update";
         string updatedDescription = "Description after update";
         var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto(updatedName, updatedDescription, updatedIsCompleted);
 
         // Act
-        var result = Controller.UpdateById(toDoItem1.ToDoItemId, toDoItemUpdateRequestDto);
+        var result = await Controller.UpdateByIdAsync(toDoItem1.ToDoItemId, toDoItemUpdateRequestDto);
 
         // Assert
         Assert.IsType<NoContentResult>(result);
@@ -40,13 +41,13 @@ public class PutTests : TestsBase
         Assert.Contains(toDoItem1.ToDoItemId, itemsIds);
         Assert.Contains(toDoItem2.ToDoItemId, itemsIds);
 
-        var updatedItem = DbContext.ToDoItems.Find(toDoItem1.ToDoItemId);
+        var updatedItem = await DbContext.ToDoItems.FindAsync(toDoItem1.ToDoItemId);
         Assert.NotNull(updatedItem);
         Assert.Equal(updatedName, updatedItem.Name);
         Assert.Equal(updatedDescription, updatedItem.Description);
         Assert.Equal(updatedIsCompleted, updatedItem.IsCompleted);
 
-        var notUpdatedItem = DbContext.ToDoItems.Find(toDoItem2.ToDoItemId);
+        var notUpdatedItem = await DbContext.ToDoItems.FindAsync(toDoItem2.ToDoItemId);
         Assert.NotNull(notUpdatedItem);
         Assert.Equal(toDoItem2.Name, notUpdatedItem.Name);
         Assert.Equal(toDoItem2.Description, notUpdatedItem.Description);
@@ -54,7 +55,7 @@ public class PutTests : TestsBase
     }
 
     [Fact]
-    public void Put_UpdateByNonExistentId_Returns404NotFound()
+    public async Task Put_UpdateByNonExistentId_Returns404NotFound_Async()
     {
         // Arrange
         var toDoItem = new ToDoItem
@@ -63,12 +64,12 @@ public class PutTests : TestsBase
             Description = "Description not to be updated",
             IsCompleted = false
         };
-        DbContext.ToDoItems.Add(toDoItem);
-        DbContext.SaveChanges();
+        await DbContext.ToDoItems.AddAsync(toDoItem);
+        await DbContext.SaveChangesAsync();
         var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto("Name after update", "Description after update", true);
 
         // Act
-        var result = Controller.UpdateById(9999, toDoItemUpdateRequestDto); // 9999 = nonexistent ID
+        var result = await Controller.UpdateByIdAsync(9999, toDoItemUpdateRequestDto); // 9999 = nonexistent ID
 
         // Assert
         Assert.IsType<NotFoundResult>(result);

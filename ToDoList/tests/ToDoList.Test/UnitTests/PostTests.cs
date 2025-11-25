@@ -15,7 +15,7 @@ public class PostTests : TestsBase
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void Post_CreateValidRequest_ReturnsCreatedAtAction(bool isCompleted)
+    public async Task Post_CreateValidRequest_ReturnsCreatedAtAction_Async(bool isCompleted)
     {
         // Arrange
         string itemName = "Name of task";
@@ -23,13 +23,13 @@ public class PostTests : TestsBase
         var toDoItemCreateRequestDto = new ToDoItemCreateRequestDto(itemName, itemDescription, isCompleted);
 
         // Act
-        var result = Controller.Create(toDoItemCreateRequestDto);
+        var result = await Controller.CreateAsync(toDoItemCreateRequestDto);
 
         // Assert
-        RepositoryMock.Received(1).Create(Arg.Any<ToDoItem>());
+        await RepositoryMock.Received(1).CreateAsync(Arg.Any<ToDoItem>());
 
         var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result.Result);
-        createdAtActionResult.ActionName.Should().Be("ReadById");
+        createdAtActionResult.ActionName.Should().Be("ReadByIdAsync");
 
         var todoItemResponseDto = createdAtActionResult.Value as ToDoItemGetResponseDto;
         todoItemResponseDto.Should().NotBeNull();
@@ -46,17 +46,17 @@ public class PostTests : TestsBase
     }
 
     [Fact]
-    public void Post_CreateUnhandledException_ReturnsInternalServerError()
+    public async Task Post_CreateUnhandledException_ReturnsInternalServerError_Async()
     {
         // Arrange
         var toDoItemCreateRequestDto = new ToDoItemCreateRequestDto("Name", "Description", false);
-        RepositoryMock.When(x => x.Create(Arg.Any<ToDoItem>())).Do(_ => throw new InvalidOperationException());
+        RepositoryMock.When(x => x.CreateAsync(Arg.Any<ToDoItem>())).Do(_ => throw new InvalidOperationException());
 
         // Act
-        var result = Controller.Create(toDoItemCreateRequestDto);
+        var result = await Controller.CreateAsync(toDoItemCreateRequestDto);
 
         // Assert
-        RepositoryMock.Received(1).Create(Arg.Any<ToDoItem>());
+        await RepositoryMock.Received(1).CreateAsync(Arg.Any<ToDoItem>());
 
         var objectResult = result.Result as ObjectResult;
         objectResult.Should().NotBeNull();
