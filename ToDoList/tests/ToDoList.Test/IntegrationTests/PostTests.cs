@@ -13,7 +13,8 @@ public class PostTests : TestsBase
         // Arrange
         string itemName = "Name of task";
         string itemDescription = "Description of task";
-        var toDoItemCreateRequestDto = new ToDoItemCreateRequestDto(itemName, itemDescription, isCompleted);
+        string itemCategory = "Category of task";
+        var toDoItemCreateRequestDto = new ToDoItemCreateRequestDto(itemName, itemDescription, isCompleted, itemCategory);
 
         // Act
         var result = await Controller.CreateAsync(toDoItemCreateRequestDto);
@@ -31,5 +32,6 @@ public class PostTests : TestsBase
         Assert.Equal(itemName, todoItemResponseDto.Name);
         Assert.Equal(itemDescription, todoItemResponseDto.Description);
         Assert.Equal(isCompleted, todoItemResponseDto.IsCompleted);
+        Assert.Equal(itemCategory, todoItemResponseDto.Category);
     }
 }

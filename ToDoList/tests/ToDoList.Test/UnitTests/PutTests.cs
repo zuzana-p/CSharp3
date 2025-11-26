@@ -17,7 +17,8 @@ public class PutTests : TestsBase
         // Arrange
         string updatedName = "Name after update";
         string updatedDescription = "Description after update";
-        var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto(updatedName, updatedDescription, updatedIsCompleted);
+        string updatedCategory = "Category after update";
+        var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto(updatedName, updatedDescription, updatedIsCompleted, updatedCategory);
         await RepositoryMock.UpdateByIdAsync(1, Arg.Any<ToDoItem>());
 
         // Act
@@ -33,7 +34,7 @@ public class PutTests : TestsBase
     public async Task Put_UpdateByIdWhenIdNotFound_ReturnsNotFound_Async()
     {
         // Arrange
-        var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto("Name after update", "Description after update", true);
+        var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto("Name after update", "Description after update", true, "Category after update");
         RepositoryMock
             .When(x => x.UpdateByIdAsync(999, Arg.Any<ToDoItem>()))
             .Do(x => throw new EntityNotFoundException(nameof(ToDoItem), 999));
@@ -51,7 +52,7 @@ public class PutTests : TestsBase
     public async Task Put_UpdateByIdUnhandledException_ReturnsInternalServerError_Async()
     {
         // Arrange
-        var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto("Name after update", "Description after update", true);
+        var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto("Name after update", "Description after update", true, "Category after update");
         RepositoryMock
                     .When(x => x.UpdateByIdAsync(1, Arg.Any<ToDoItem>()))
                     .Do(x => throw new InvalidOperationException());

@@ -16,7 +16,7 @@ public class PutTests : TestsBase
         {
             Name = "Task to be updated 1",
             Description = "Description to be updated 1",
-            IsCompleted = false
+            IsCompleted = false,
         };
         var toDoItem2 = new ToDoItem
         {
@@ -29,7 +29,8 @@ public class PutTests : TestsBase
 
         string updatedName = "Name after update";
         string updatedDescription = "Description after update";
-        var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto(updatedName, updatedDescription, updatedIsCompleted);
+        string updatedCategory = "Category after update";
+        var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto(updatedName, updatedDescription, updatedIsCompleted, updatedCategory);
 
         // Act
         var result = await Controller.UpdateByIdAsync(toDoItem1.ToDoItemId, toDoItemUpdateRequestDto);
@@ -46,12 +47,15 @@ public class PutTests : TestsBase
         Assert.Equal(updatedName, updatedItem.Name);
         Assert.Equal(updatedDescription, updatedItem.Description);
         Assert.Equal(updatedIsCompleted, updatedItem.IsCompleted);
+        Assert.Equal(updatedCategory, updatedItem.Category);
+
 
         var notUpdatedItem = await DbContext.ToDoItems.FindAsync(toDoItem2.ToDoItemId);
         Assert.NotNull(notUpdatedItem);
         Assert.Equal(toDoItem2.Name, notUpdatedItem.Name);
         Assert.Equal(toDoItem2.Description, notUpdatedItem.Description);
         Assert.Equal(toDoItem2.IsCompleted, notUpdatedItem.IsCompleted);
+        Assert.Equal(toDoItem2.Category, notUpdatedItem.Category);
     }
 
     [Fact]
@@ -66,7 +70,7 @@ public class PutTests : TestsBase
         };
         await DbContext.ToDoItems.AddAsync(toDoItem);
         await DbContext.SaveChangesAsync();
-        var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto("Name after update", "Description after update", true);
+        var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto("Name after update", "Description after update", true, "Category after update");
 
         // Act
         var result = await Controller.UpdateByIdAsync(9999, toDoItemUpdateRequestDto); // 9999 = nonexistent ID

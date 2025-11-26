@@ -5,14 +5,9 @@ using ToDoList.Domain.Exceptions;
 using ToDoList.Domain.Models;
 
 
-public class ToDoItemsRepository : IRepositoryAsync<ToDoItem>
+public class ToDoItemsRepository(ToDoItemsContext dbContext) : IRepositoryAsync<ToDoItem>
 {
-    private readonly ToDoItemsContext dbContext;
-
-    public ToDoItemsRepository(ToDoItemsContext dbContext)
-    {
-        this.dbContext = dbContext;
-    }
+    private readonly ToDoItemsContext dbContext = dbContext;
 
     public async Task CreateAsync(ToDoItem item)
     {
@@ -24,21 +19,18 @@ public class ToDoItemsRepository : IRepositoryAsync<ToDoItem>
 
     public async Task<ToDoItem?> ReadByIdAsync(int id) => await dbContext.ToDoItems.FindAsync(id);
 
-    public async Task UpdateByIdAsync(int id, ToDoItem toDoItemValuesAfterUpdate)
+    public async Task UpdateByIdAsync(ToDoItem toDoItemValuesAfterUpdate)
     {
-        var toDoItem = await dbContext.ToDoItems.FindAsync(id);
+        var toDoItem = await dbContext.ToDoItems.FindAsync(toDoItemValuesAfterUpdate.ToDoItemId);
 
         if (toDoItem != null)
         {
-            toDoItem.Name = toDoItemValuesAfterUpdate.Name; // noteZPA Context.Entry(foundItem).CurrentValues.SetValues(item)
-            toDoItem.Description = toDoItemValuesAfterUpdate.Description;
-            toDoItem.IsCompleted = toDoItemValuesAfterUpdate.IsCompleted;
-
+            dbContext.Entry(toDoItem).CurrentValues.SetValues(toDoItemValuesAfterUpdate);
             await dbContext.SaveChangesAsync();
         }
         else
         {
-            throw new EntityNotFoundException(nameof(ToDoItem), id);
+            throw new EntityNotFoundException(nameof(ToDoItem), toDoItemValuesAfterUpdate.ToDoItemId);
         }
     }
 

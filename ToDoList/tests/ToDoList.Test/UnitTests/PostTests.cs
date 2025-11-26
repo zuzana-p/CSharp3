@@ -18,9 +18,10 @@ public class PostTests : TestsBase
     public async Task Post_CreateValidRequest_ReturnsCreatedAtAction_Async(bool isCompleted)
     {
         // Arrange
-        string itemName = "Name of task";
-        string itemDescription = "Description of task";
-        var toDoItemCreateRequestDto = new ToDoItemCreateRequestDto(itemName, itemDescription, isCompleted);
+        string itemName = "Name of the task";
+        string itemDescription = "Description of the task";
+        string itemCategory = "Category of the task";
+        var toDoItemCreateRequestDto = new ToDoItemCreateRequestDto(itemName, itemDescription, isCompleted, itemCategory);
 
         // Act
         var result = await Controller.CreateAsync(toDoItemCreateRequestDto);
@@ -49,7 +50,7 @@ public class PostTests : TestsBase
     public async Task Post_CreateUnhandledException_ReturnsInternalServerError_Async()
     {
         // Arrange
-        var toDoItemCreateRequestDto = new ToDoItemCreateRequestDto("Name", "Description", false);
+        var toDoItemCreateRequestDto = new ToDoItemCreateRequestDto("Name", "Description", false, "Category");
         RepositoryMock.When(x => x.CreateAsync(Arg.Any<ToDoItem>())).Do(_ => throw new InvalidOperationException());
 
         // Act

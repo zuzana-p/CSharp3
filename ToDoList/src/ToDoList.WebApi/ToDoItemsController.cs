@@ -1,7 +1,7 @@
 namespace ToDoList.WebApi;
 
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.CSharp;
 using ToDoList.Domain.DTOs;
 using ToDoList.Domain.Exceptions;
 using ToDoList.Domain.Models;
@@ -54,7 +54,8 @@ public class ToDoItemsController(IRepositoryAsync<ToDoItem> repository) : Contro
         }
     }
 
-    [HttpGet("{todoItemId:int}")]
+    [HttpGet("{toDoItemId:int}")]
+    [ActionName(nameof(ReadByIdAsync))] // to help routing with async suffix, see https://www.josephguadagno.net/2020/07/01/no-route-matches-the-supplied-values
     public async Task<ActionResult<ToDoItemGetResponseDto>> ReadByIdAsync(int toDoItemId)
     {
         try
@@ -76,13 +77,14 @@ public class ToDoItemsController(IRepositoryAsync<ToDoItem> repository) : Contro
         }
     }
 
-    [HttpPut("{todoItemId:int}")]
-    public async Task<IActionResult> UpdateByIdAsync(int todoItemId, [FromBody] ToDoItemUpdateRequestDto request)
+    [HttpPut("{toDoItemId:int}")]
+    public async Task<IActionResult> UpdateByIdAsync(int toDoItemId, [FromBody] ToDoItemUpdateRequestDto request)
     {
         try
         {
             var toDoItemValuesAfterUpdate = request.ToDomain();
-            await repository.UpdateByIdAsync(todoItemId, toDoItemValuesAfterUpdate);
+            toDoItemValuesAfterUpdate.ToDoItemId = toDoItemId;
+            await repository.UpdateByIdAsync(toDoItemValuesAfterUpdate);
             return NoContent();
         }
         catch (EntityNotFoundException)

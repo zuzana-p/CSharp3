@@ -5,6 +5,6 @@ public interface IRepositoryAsync<T> where T : class
     public Task CreateAsync(T entity);
     public Task<IEnumerable<T>> ReadAsync();
     public Task<T?> ReadByIdAsync(int id);
-    public Task UpdateByIdAsync(int id, T entity);
+    public Task UpdateByIdAsync(T entity);
     public Task DeleteByIdAsync(int id);
 }
