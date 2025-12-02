@@ -1,0 +1,38 @@
+﻿@page "/editToDoItem/{ItemId:int}"
+@using Microsoft.AspNetCore.Components
+@using ToDoList.Domain.Models
+@using ToDoList.Frontend.Clients
+@using ToDoList.Frontend.Models
+
+@inject NavigationManager NavigationManager
+@inject IToDoItemsClient ToDoItemsClient
+@rendermode InteractiveServer
+
+@if (ToDoItemModel is not null)
+{
+    <EditForm Model="ToDoItemModel" FormName="" OnSubmit="SubmitAsync">
+        <InputText id="Name" @bind-Value="ToDoItemModel.Name" />
+        <InputCheckbox id="IsCompleted" @bind-Value="ToDoItemModel.IsCompleted" />
+        <button type="submit">Submit</button>
+    </EditForm>
+}
+
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        ToDoItemModel = await ToDoItemsClient.ReadItemByIdAsync(ItemId);
+    }
+
+    [Parameter]
+    public int ItemId { get; set; }
+
+    [SupplyParameterFromForm]
+    public ToDoItemView ToDoItemModel { get; set; }
+
+    public async Task SubmitAsync()
+    {
+        await ToDoItemsClient.UpdateItemAsync(ToDoItemModel);
+        NavigationManager.NavigateTo($"/"); //todoZPA hover?
+    }
+}

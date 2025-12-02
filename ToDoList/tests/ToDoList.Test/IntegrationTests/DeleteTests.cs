@@ -14,12 +14,15 @@ public class DeleteTests : TestsBase
             Name = "Task to be deleted",
             Description = "This task will be deleted",
             IsCompleted = false
+            Category = "Category of task that will be deleted"
         };
         var itemNotToDelete = new ToDoItem
         {
             Name = "Task not to be deleted",
             Description = "This task will not be deleted",
-            IsCompleted = true
+            IsCompleted = true,
+            Category = "Category of task that will not be deleted"
+
         };
         await DbContext.ToDoItems.AddRangeAsync(itemToDelete, itemNotToDelete);
         await DbContext.SaveChangesAsync();

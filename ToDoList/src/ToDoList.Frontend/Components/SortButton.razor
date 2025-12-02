@@ -1,0 +1,15 @@
+﻿<button class="btn btn-outline-warning" @onclick="OnClick">
+    @if (Ascending)
+    {
+        <i class="bi bi-sort-up"></i>
+    }
+    else
+    {
+        <i class="bi bi-sort-down-alt"></i>
+    }
+</button>
+
+@code {
+    [Parameter] public bool Ascending { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
+}

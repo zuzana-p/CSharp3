@@ -2,87 +2,63 @@
 @using ToDoList.Frontend.Models
 
 @inject IToDoItemsClient toDoItemsClient;
+@inject NavigationManager NavigationManager
 
 <div>
     <h2>ToDo Items Dashboard</h2>
-    <table>
-        <thead>
+    <table class="table table-hover mt-3 align-middle">
+        <thead class="table-dark align-middle">
             <tr>
                 <th>
                     ID
-                    <button @onclick="OrderById">⇅</button>
+                    <SortButton Ascending="@sortAscendingById" OnClick="OrderById" />
                 </th>
                 <th>
                     NAME
-                    <button @onclick="OrderByName">⇅</button>
+                    <SortButton Ascending="@sortAscendingByName" OnClick="OrderByName" />
                 </th>
                 <th>DESCRIPTION</th>
+                <th>Actions</th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
             @foreach (var item in sortedData)
             {
-                <tr>
+                <tr class="table-secondary">
                     <td>@item.Id</td>
                     <td>@item.Name</td>
                     <td>@item.Description</td>
-                    <td>@(item.IsCompleted ? "☑" : "☐")</td>
+                    <td><button class="btn btn-outline-success" @onclick="() => EditItem(item)">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button class="btn btn-outline-danger" @onclick="() => DeleteItemAsync(item)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                    <td><button class="btn btn-outline-success no-focus" @onclick="() => SwitchIsCompleted(item)">
+                            @(item.IsCompleted ?
+                                                    (MarkupString)"<i class=\"bi bi-circle\"></i>" :
+                                                    (MarkupString)"<i class=\"bi bi-check-circle-fill\"></i>")
+                        </button></td>
                 </tr>
             }
         </tbody>
     </table>
 </div>
 
-<style>
-    table {
-        text-align: left;
-        border-collapse: collapse;
-    }
-
-    th {
-        background-color: #469b90;
-        font-weight: bold;
-    }
-
-    td,
-    th {
-        border-bottom: 1px solid rgb(116, 109, 109);
-        padding: 12px 16px;
-    }
-
-    tr:hover td {
-        background-color: #f0da5d;
-    }
-
-    tr:last-child td {
-        border-bottom: none;
-    }
-
-    th button {
-        border: 0.5px solid rgb(116, 109, 109);
-        background: transparent;
-        cursor: pointer;
-        font-size: 14px;
-        padding: 0 4px;
-    }
-
-    th button:hover {
-        background-color: #f0da5d;
-    }
-</style>
-
 @code {
-    private List<ToDoItemView> testData = new()
-{
-new ToDoItemView(1, "Nakoupit potraviny", "Mléko, chléb, vejce", false),
-new ToDoItemView(2, "Dokončit projekt", "Implementovat všechny funkce", true),
-new ToDoItemView(3, "Zavolat mamince", "Domluvit víkend", false),
-new ToDoItemView(4, "Cvičit", "Běhání v parku", false),
-new ToDoItemView(5, "Přečíst knihu", "Kapitola 5", true)
-};
+    /*private List<ToDoItemView> testData = new()
+    {
+    new ToDoItemView(1, "Nakoupit potraviny", "Mléko, chléb, vejce", false),
+    new ToDoItemView(2, "Dokončit projekt", "Implementovat všechny funkce", true),
+    new ToDoItemView(3, "Zavolat mamince", "Domluvit víkend", false),
+    new ToDoItemView(4, "Cvičit", "Běhání v parku", false),
+    new ToDoItemView(5, "Přečíst knihu", "Kapitola 5", true)
+    };*/
 
     private List<ToDoItemView> sortedData = new();
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -119,5 +95,21 @@ new ToDoItemView(5, "Přečíst knihu", "Kapitola 5", true)
         {
             sortedData = sortedData.OrderByDescending(x => x.Name).ToList();
         }
+    }
+
+    private void EditItem(ToDoItemView toDoItem)
+    {
+        NavigationManager.NavigateTo($"editToDoItem/{toDoItem.Id}");
+    }
+
+    private void SwitchIsCompleted(ToDoItemView item)
+    {
+        item.IsCompleted = !item.IsCompleted;
+    }
+
+    private async Task DeleteItemAsync(ToDoItemView item)
+    {
+        await toDoItemsClient.DeleteItemByIdAsync(item);
+        NavigationManager.NavigateTo($"/", true);
     }
 }

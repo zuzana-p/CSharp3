@@ -22,5 +22,5 @@ public record ToDoItemGetResponseDto
         Category = category;
     }
     public ToDoItemGetResponseDto(ToDoItem toDoItem)
-        : this(toDoItem.ToDoItemId, toDoItem.Name, toDoItem?.Description, toDoItem.IsCompleted, toDoItem?.Category) { } // todoZPA doresit warning - dotaz na Lubose
+        : this(toDoItem?.ToDoItemId ?? throw new ArgumentNullException(nameof(toDoItem)), toDoItem.Name, toDoItem?.Description, toDoItem.IsCompleted, toDoItem?.Category) { } // todoZPA doresit warning - dotaz na Lubose
 }
