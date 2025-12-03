@@ -20,6 +20,7 @@ public class ToDoItemsClient(HttpClient httpClient) : IToDoItemsClient
                 Id = dto.ToDoItemId,
                 Name = dto.Name,
                 Description = dto.Description,
+                Category = dto.Category,
                 IsCompleted = dto.IsCompleted
             }
             )];
@@ -40,6 +41,7 @@ public class ToDoItemsClient(HttpClient httpClient) : IToDoItemsClient
             Id = response.ToDoItemId,
             Name = response.Name,
             Description = response.Description,
+            Category = response.Category,
             IsCompleted = response.IsCompleted
         };
 

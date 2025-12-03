@@ -8,14 +8,40 @@
 @inject IToDoItemsClient ToDoItemsClient
 @rendermode InteractiveServer
 
-@if (ToDoItemModel is not null)
-{
-    <EditForm Model="ToDoItemModel" FormName="" OnSubmit="SubmitAsync">
-        <InputText id="Name" @bind-Value="ToDoItemModel.Name" />
-        <InputCheckbox id="IsCompleted" @bind-Value="ToDoItemModel.IsCompleted" />
-        <button type="submit">Submit</button>
-    </EditForm>
-}
+<div>
+    <h2 class="text-center mt-4 text-secondary align-items-center">EDIT TODO ITEM</h2>
+    @if (ToDoItemModel is not null)
+    {
+        <div class="container text-left align-items-center">
+            <EditForm class="mt-5" Model="ToDoItemModel" FormName="" OnSubmit="SubmitAsync">
+                <div class="row justify-content-center mb-4">
+                    <div class="col-md-2">
+                        <InputText id="Name" class="form-control" @bind-Value="ToDoItemModel.Name" />
+                        <EditItemLabel For="Name" Display="name"></EditItemLabel>
+                    </div>
+                    <div class="col-md-4">
+                        <InputText class="form-control" id="Description" @bind-Value="ToDoItemModel.Description" />
+                        <EditItemLabel For="Description" Display="description"></EditItemLabel>
+                    </div>
+                    <div class="col-md-2">
+                        <InputText class="form-control" id=" Category" @bind-Value="ToDoItemModel.Category" />
+                        <EditItemLabel For="Category" Display="category"></EditItemLabel>
+                    </div>
+                    <div class="col-md-1 mt-1">
+                        <InputCheckbox id="IsCompleted" class="form-check-input" @bind-Value="ToDoItemModel.IsCompleted" />
+                    </div>
+                </div>
+                <div class="row col-md-10 text-end">
+                    <div class="col-md-12">
+                        <button class="col-md-1 btn btn-secondary" type="button" @onclick="GoBack">Cancel</button>
+                        <button class="col-md-1 btn btn-success text-center" type="submit">Submit</button>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    }
+</div>
+
 
 
 @code {
@@ -33,6 +59,11 @@
     public async Task SubmitAsync()
     {
         await ToDoItemsClient.UpdateItemAsync(ToDoItemModel);
-        NavigationManager.NavigateTo($"/"); //todoZPA hover?
+        NavigationManager.NavigateTo($"/");
+    }
+
+    public void GoBack()
+    {
+        NavigationManager.NavigateTo($"/");
     }
 }

@@ -1,24 +1,32 @@
 ﻿@using ToDoList.Frontend.Clients
 @using ToDoList.Frontend.Models
 
-@inject IToDoItemsClient toDoItemsClient;
+@inject IToDoItemsClient toDoItemsClient
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JS
 
+
+
+<!-- Table -->
 <div>
-    <h2>ToDo Items Dashboard</h2>
+    <h2 class="text-center mt-4 text-secondary align-items-center">TODO ITEMS DASHBOARD</h2>
     <table class="table table-hover mt-3 align-middle">
         <thead class="table-dark align-middle">
             <tr>
+                <th></th>
                 <th>
-                    ID
                     <SortButton Ascending="@sortAscendingById" OnClick="OrderById" />
+                    id
                 </th>
                 <th>
-                    NAME
                     <SortButton Ascending="@sortAscendingByName" OnClick="OrderByName" />
+                    name
                 </th>
-                <th>DESCRIPTION</th>
-                <th>Actions</th>
+                <th>description</th>
+                <th>
+                    <SortButton Ascending="@sortAscendingByCategory" OnClick="OrderByCategory" />
+                    category
+                </th>
                 <th></th>
             </tr>
         </thead>
@@ -26,46 +34,45 @@
             @foreach (var item in sortedData)
             {
                 <tr class="table-secondary">
+                    <td class="text-left"><button class="btn btn-outline-success" @onclick="() => SwitchIsCompleted(item)">
+                            @(item.IsCompleted ?
+                                                    (MarkupString)"<i class=\"bi bi-check-circle-fill\"></i>" :
+                                                    (MarkupString)"<i class=\"bi bi-circle\"></i>")
+                        </button></td>
                     <td>@item.Id</td>
                     <td>@item.Name</td>
                     <td>@item.Description</td>
-                    <td><button class="btn btn-outline-success" @onclick="() => EditItem(item)">
+                    <td>@item.Category</td>
+                    <td class="text-end"><button class="btn btn-outline-success" @onclick="() => EditItem(item)">
                             <i class="bi bi-pencil-square"></i>
                         </button>
                         <button class="btn btn-outline-danger" @onclick="() => DeleteItemAsync(item)">
                             <i class="bi bi-trash"></i>
                         </button>
                     </td>
-                    <td><button class="btn btn-outline-success no-focus" @onclick="() => SwitchIsCompleted(item)">
-                            @(item.IsCompleted ?
-                                                    (MarkupString)"<i class=\"bi bi-circle\"></i>" :
-                                                    (MarkupString)"<i class=\"bi bi-check-circle-fill\"></i>")
-                        </button></td>
                 </tr>
             }
         </tbody>
     </table>
 </div>
 
+<ConfirmDeleteModal CurrentItem=@currentItem OnClick="() => DeleteItemAsync(currentItem)" />
+
+
+
+
+
 @code {
-    /*private List<ToDoItemView> testData = new()
-    {
-    new ToDoItemView(1, "Nakoupit potraviny", "Mléko, chléb, vejce", false),
-    new ToDoItemView(2, "Dokončit projekt", "Implementovat všechny funkce", true),
-    new ToDoItemView(3, "Zavolat mamince", "Domluvit víkend", false),
-    new ToDoItemView(4, "Cvičit", "Běhání v parku", false),
-    new ToDoItemView(5, "Přečíst knihu", "Kapitola 5", true)
-    };*/
-
     private List<ToDoItemView> sortedData = new();
-
+    private ToDoItemView? currentItem;
+    bool sortAscendingById = false;
+    bool sortAscendingByName = false;
+    bool sortAscendingByCategory = false;
 
     protected override async Task OnInitializedAsync()
     {
         sortedData = await toDoItemsClient.ReadItemsAsync();
     }
-
-    bool sortAscendingById = false;
 
     private void OrderById()
     {
@@ -81,8 +88,6 @@
         }
     }
 
-    bool sortAscendingByName = false;
-
     private void OrderByName()
     {
         sortAscendingByName = !sortAscendingByName;
@@ -97,19 +102,34 @@
         }
     }
 
+    private void OrderByCategory()
+    {
+        sortAscendingByCategory = !sortAscendingByCategory;
+
+        if (sortAscendingByCategory)
+        {
+            sortedData = sortedData.OrderBy(x => x.Category).ToList();
+        }
+        else
+        {
+            sortedData = sortedData.OrderByDescending(x => x.Category).ToList();
+        }
+    }
+
     private void EditItem(ToDoItemView toDoItem)
     {
         NavigationManager.NavigateTo($"editToDoItem/{toDoItem.Id}");
     }
 
-    private void SwitchIsCompleted(ToDoItemView item)
+    private async Task SwitchIsCompleted(ToDoItemView item)
     {
         item.IsCompleted = !item.IsCompleted;
+        await toDoItemsClient.UpdateItemAsync(item);
     }
 
     private async Task DeleteItemAsync(ToDoItemView item)
     {
         await toDoItemsClient.DeleteItemByIdAsync(item);
-        NavigationManager.NavigateTo($"/", true);
+        sortedData = await toDoItemsClient.ReadItemsAsync();
     }
 }
