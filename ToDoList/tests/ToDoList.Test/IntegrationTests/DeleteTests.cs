@@ -13,7 +13,7 @@ public class DeleteTests : TestsBase
         {
             Name = "Task to be deleted",
             Description = "This task will be deleted",
-            IsCompleted = false
+            IsCompleted = false,
             Category = "Category of task that will be deleted"
         };
         var itemNotToDelete = new ToDoItem

@@ -28,5 +28,6 @@ public class TestsBase : IDisposable
         {
             // ignore – some rows may already be gone due to tests running in parallel
         }
+        GC.SuppressFinalize(this);
     }
 }

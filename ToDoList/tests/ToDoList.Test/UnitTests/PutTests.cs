@@ -19,13 +19,13 @@ public class PutTests : TestsBase
         string updatedDescription = "Description after update";
         string updatedCategory = "Category after update";
         var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto(updatedName, updatedDescription, updatedIsCompleted, updatedCategory);
-        await RepositoryMock.UpdateByIdAsync(1, Arg.Any<ToDoItem>());
+        await RepositoryMock.UpdateByIdAsync(Arg.Any<ToDoItem>());
 
         // Act
         var result = await Controller.UpdateByIdAsync(1, toDoItemUpdateRequestDto);
 
         // Assert
-        await RepositoryMock.Received(1).UpdateByIdAsync(1, Arg.Any<ToDoItem>());
+        await RepositoryMock.Received(1).UpdateByIdAsync(Arg.Any<ToDoItem>());
 
         result.Should().BeOfType<NoContentResult>();
     }
@@ -36,14 +36,14 @@ public class PutTests : TestsBase
         // Arrange
         var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto("Name after update", "Description after update", true, "Category after update");
         RepositoryMock
-            .When(x => x.UpdateByIdAsync(999, Arg.Any<ToDoItem>()))
+            .When(x => x.UpdateByIdAsync(Arg.Any<ToDoItem>()))
             .Do(x => throw new EntityNotFoundException(nameof(ToDoItem), 999));
 
         // Act
         var result = await Controller.UpdateByIdAsync(999, toDoItemUpdateRequestDto);
 
         // Assert
-        await RepositoryMock.Received(1).UpdateByIdAsync(999, Arg.Any<ToDoItem>());
+        await RepositoryMock.Received(1).UpdateByIdAsync(Arg.Any<ToDoItem>());
 
         result.Should().BeOfType<NotFoundResult>();
     }
@@ -54,14 +54,14 @@ public class PutTests : TestsBase
         // Arrange
         var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto("Name after update", "Description after update", true, "Category after update");
         RepositoryMock
-                    .When(x => x.UpdateByIdAsync(1, Arg.Any<ToDoItem>()))
+                    .When(x => x.UpdateByIdAsync(Arg.Any<ToDoItem>()))
                     .Do(x => throw new InvalidOperationException());
 
         // Act
         var result = await Controller.UpdateByIdAsync(1, toDoItemUpdateRequestDto);
 
         // Assert
-        await RepositoryMock.Received(1).UpdateByIdAsync(1, Arg.Any<ToDoItem>());
+        await RepositoryMock.Received(1).UpdateByIdAsync(Arg.Any<ToDoItem>());
 
         var objectResult = result as ObjectResult;
         objectResult.Should().NotBeNull();
