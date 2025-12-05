@@ -12,7 +12,7 @@ public abstract class ErrorHandlingComponentBase : ComponentBase
         try
         {
             await operation();
-            //return true;
+            return true;
         }
         catch (Exception ex)
         {
