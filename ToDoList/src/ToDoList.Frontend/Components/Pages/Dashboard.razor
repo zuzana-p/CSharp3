@@ -123,13 +123,20 @@
         NavigationManager.NavigateTo($"editToDoItem/{toDoItem.Id}");
     }
 
-    private async Task SwitchIsCompleted(ToDoItemView item) // todoZPA nefunguje dobře pokud dojde k chybě (přepne se i tak)
+    private async Task SwitchIsCompleted(ToDoItemView item)
     {
-        item.IsCompleted = !item.IsCompleted;
-        var succesfulResponse = await ExecuteWithErrorHandlingAsync(async () => await toDoItemsClient.UpdateItemAsync(item));
+        var itemCopy = item with { };
+        var switchedIsCompleted = !item.IsCompleted;
+        itemCopy.IsCompleted = switchedIsCompleted;
+        var succesfulResponse = await ExecuteWithErrorHandlingAsync(async () => await
+        toDoItemsClient.UpdateItemAsync(itemCopy));
+        if (succesfulResponse)
+        {
+            item.IsCompleted = switchedIsCompleted;
+        }
     }
 
-    private async Task DeleteItemAsync(ToDoItemView item) // todoZPA nemám otestované pokud dojde k chybě
+    private async Task DeleteItemAsync(ToDoItemView item)
     {
         var succesfulResponse = await ExecuteWithErrorHandlingAsync(async () => await
         toDoItemsClient.DeleteItemByIdAsync(item));
