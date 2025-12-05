@@ -1,11 +1,10 @@
-namespace ToDoList.Frontend.Models
+namespace ToDoList.Frontend.Models;
+
+public record ToDoItemView
 {
-    public class ToDoItemView() // todoZPA - protection level
-    {
-        public int Id;
-        public string Name;
-        public string Description;
-        public bool IsCompleted;
-        public string Category;
-    };
+    public int Id { get; set; }
+    public required string Name { get; set; }
+    public string? Description { get; set; }
+    public required bool IsCompleted { get; set; }
+    public string? Category { get; set; }
 }

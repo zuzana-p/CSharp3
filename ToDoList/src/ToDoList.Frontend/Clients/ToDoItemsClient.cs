@@ -1,5 +1,6 @@
 namespace ToDoList.Frontend.Clients;
 
+using System.Net;
 using ToDoList.Domain.DTOs;
 using ToDoList.Frontend.Models;
 
@@ -14,6 +15,8 @@ public class ToDoItemsClient(HttpClient httpClient) : IToDoItemsClient
         try
         {
             var response = await httpClient.GetFromJsonAsync<List<ToDoItemGetResponseDto>>("api/ToDoItems");
+            ArgumentNullException.ThrowIfNull(response);
+
 
             toDoItemViews = [.. response.Select(dto => new ToDoItemView()
             {
@@ -25,9 +28,9 @@ public class ToDoItemsClient(HttpClient httpClient) : IToDoItemsClient
             }
             )];
         }
-        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
         {
-            // empty db
+            // empty db, return empty list
         }
         return toDoItemViews;
     }
@@ -35,6 +38,7 @@ public class ToDoItemsClient(HttpClient httpClient) : IToDoItemsClient
     public async Task<ToDoItemView> ReadItemByIdAsync(int id)
     {
         var response = await httpClient.GetFromJsonAsync<ToDoItemGetResponseDto>($"api/ToDoItems/{id}");
+        ArgumentNullException.ThrowIfNull(response);
 
         var toDoItem = new ToDoItemView()
         {
@@ -48,16 +52,52 @@ public class ToDoItemsClient(HttpClient httpClient) : IToDoItemsClient
         return toDoItem;
     }
 
-    public async Task UpdateItemAsync(ToDoItemView toDoItem)
+    public async Task UpdateItemAsync(ToDoItemView toDoItemView)
     {
-        var itemRequest = new ToDoItemUpdateRequestDto(toDoItem.Name, toDoItem.Description, toDoItem.IsCompleted, toDoItem.Category); // todoZPA trycatch + category
-        await httpClient.PutAsJsonAsync($"api/ToDoItems/{toDoItem.Id}", itemRequest);
+        var itemRequest = new ToDoItemUpdateRequestDto(toDoItemView.Name, toDoItemView.Description, toDoItemView.IsCompleted, toDoItemView.Category);
+        var response = await httpClient.PutAsJsonAsync($"api/ToDoItems/{toDoItemView.Id}", itemRequest);
+
+        if (response.IsSuccessStatusCode)
+        {
+            return;
+        }
+
+        else if (response.StatusCode == HttpStatusCode.NotFound)
+        {
+            throw new InvalidOperationException($"Item {toDoItemView.Id} no longer exists.");
+        }
+
+        else
+        {
+            string content = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException(
+                $"Update failed with status {(int)response.StatusCode}: {content}",
+                null,
+                response.StatusCode);
+        }
     }
 
-    public async Task DeleteItemByIdAsync(ToDoItemView toDoItem)
+    public async Task DeleteItemByIdAsync(ToDoItemView toDoItemView)
     {
-        // todoZPA - try catch
-        var response = await httpClient.DeleteAsync($"api/ToDoItems/{toDoItem.Id}");
-    }
+        var response = await httpClient.DeleteAsync($"api/ToDoItems/{toDoItemView.Id}");
 
+        if (response.IsSuccessStatusCode)
+        {
+            return;
+        }
+
+        else if (response.StatusCode == HttpStatusCode.NotFound)
+        {
+            throw new InvalidOperationException($"Item {toDoItemView.Id} no longer exists.");
+        }
+
+        else
+        {
+            string content = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException(
+                $"Update failed with status {(int)response.StatusCode}: {content}",
+                null,
+                response.StatusCode);
+        }
+    }
 }

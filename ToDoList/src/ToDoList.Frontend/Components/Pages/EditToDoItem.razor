@@ -2,11 +2,13 @@
 @using Microsoft.AspNetCore.Components
 @using ToDoList.Domain.Models
 @using ToDoList.Frontend.Clients
+@using ToDoList.Frontend.Components.Base
 @using ToDoList.Frontend.Models
 
 @inject NavigationManager NavigationManager
 @inject IToDoItemsClient ToDoItemsClient
 @rendermode InteractiveServer
+@inherits ErrorHandlingComponentBase
 
 <div>
     <h2 class="text-center mt-4 text-secondary align-items-center">EDIT TODO ITEM</h2>
@@ -42,7 +44,10 @@
     }
 </div>
 
-
+@if (ShowErrorModal)
+{
+    <SomethingWentWrongModal Visible="@ShowErrorModal" OnClose="HandleModalClose" Message="@ErrorMessage" />
+}
 
 @code {
     protected override async Task OnInitializedAsync()
@@ -54,12 +59,16 @@
     public int ItemId { get; set; }
 
     [SupplyParameterFromForm]
-    public ToDoItemView ToDoItemModel { get; set; }
+    public required ToDoItemView ToDoItemModel { get; set; }
 
     public async Task SubmitAsync()
     {
-        await ToDoItemsClient.UpdateItemAsync(ToDoItemModel);
-        NavigationManager.NavigateTo($"/");
+        var succesfulResponse = await ExecuteWithErrorHandlingAsync(async () => await
+        ToDoItemsClient.UpdateItemAsync(ToDoItemModel));
+        if (succesfulResponse)
+        {
+            NavigationManager.NavigateTo($"/");
+        }
     }
 
     public void GoBack()

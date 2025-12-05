@@ -1,9 +1,12 @@
 ﻿@using ToDoList.Frontend.Clients
+@using ToDoList.Frontend.Components.Base
 @using ToDoList.Frontend.Models
 
 @inject IToDoItemsClient toDoItemsClient
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JS
+@inherits ErrorHandlingComponentBase
+
 
 
 
@@ -56,22 +59,21 @@
     </table>
 </div>
 
-<ConfirmDeleteModal CurrentItem=@currentItem OnClick="() => DeleteItemAsync(currentItem)" />
-
-
-
+@if (ShowErrorModal)
+{
+    <SomethingWentWrongModal Visible="@ShowErrorModal" OnClose="HandleModalClose" Message="@ErrorMessage" />
+}
 
 
 @code {
     private List<ToDoItemView> sortedData = new();
-    private ToDoItemView? currentItem;
     bool sortAscendingById = false;
     bool sortAscendingByName = false;
     bool sortAscendingByCategory = false;
 
     protected override async Task OnInitializedAsync()
     {
-        sortedData = await toDoItemsClient.ReadItemsAsync();
+        sortedData = await toDoItemsClient.ReadItemsAsync(); // todoZPA read není vůbec ošetřený chybovou hláškou v UI
     }
 
     private void OrderById()
@@ -121,15 +123,19 @@
         NavigationManager.NavigateTo($"editToDoItem/{toDoItem.Id}");
     }
 
-    private async Task SwitchIsCompleted(ToDoItemView item)
+    private async Task SwitchIsCompleted(ToDoItemView item) // todoZPA nefunguje dobře pokud dojde k chybě (přepne se i tak)
     {
         item.IsCompleted = !item.IsCompleted;
-        await toDoItemsClient.UpdateItemAsync(item);
+        var succesfulResponse = await ExecuteWithErrorHandlingAsync(async () => await toDoItemsClient.UpdateItemAsync(item));
     }
 
-    private async Task DeleteItemAsync(ToDoItemView item)
+    private async Task DeleteItemAsync(ToDoItemView item) // todoZPA nemám otestované pokud dojde k chybě
     {
-        await toDoItemsClient.DeleteItemByIdAsync(item);
-        sortedData = await toDoItemsClient.ReadItemsAsync();
+        var succesfulResponse = await ExecuteWithErrorHandlingAsync(async () => await
+        toDoItemsClient.DeleteItemByIdAsync(item));
+        if (succesfulResponse)
+        {
+            sortedData = await toDoItemsClient.ReadItemsAsync(); // todoZPA read není vůbec ošetřený chybovou hláškou v UI
+        }
     }
 }
