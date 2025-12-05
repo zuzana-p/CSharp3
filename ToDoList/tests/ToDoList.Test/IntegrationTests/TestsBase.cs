@@ -13,6 +13,7 @@ public class TestsBase : IDisposable
     public TestsBase()
     {
         DbContext = new("Data Source=../../../data/localdb_test.db");
+        DbContext.Database.Migrate();
         var repository = new ToDoItemsRepository(DbContext);
         Controller = new ToDoItemsController(repository);
     }
