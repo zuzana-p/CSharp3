@@ -1,5 +1,6 @@
 namespace ToDoList.Test.IntegrationTests;
 
+using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using ToDoList.Domain.DTOs;
 using ToDoList.Domain.Models;
@@ -16,12 +17,14 @@ public class PutTests : TestsBase
         {
             Name = "Task to be updated 1",
             Description = "Description to be updated 1",
+            Category = "Category 1",
             IsCompleted = false,
         };
         var toDoItem2 = new ToDoItem
         {
             Name = "Task to be updated 2",
             Description = "Description to be updated 2",
+            Category = "Category 2",
             IsCompleted = true
         };
         await DbContext.ToDoItems.AddRangeAsync(toDoItem1, toDoItem2);
@@ -36,26 +39,22 @@ public class PutTests : TestsBase
         var result = await Controller.UpdateByIdAsync(toDoItem1.ToDoItemId, toDoItemUpdateRequestDto);
 
         // Assert
-        Assert.IsType<NoContentResult>(result);
+        result.Should().BeOfType<NoContentResult>();
 
         var itemsIds = DbContext.ToDoItems.Select(x => x.ToDoItemId);
-        Assert.Contains(toDoItem1.ToDoItemId, itemsIds);
-        Assert.Contains(toDoItem2.ToDoItemId, itemsIds);
+        itemsIds.Should().Contain(toDoItem1.ToDoItemId)
+            .And.Contain(toDoItem2.ToDoItemId);
 
         var updatedItem = await DbContext.ToDoItems.FindAsync(toDoItem1.ToDoItemId);
-        Assert.NotNull(updatedItem);
-        Assert.Equal(updatedName, updatedItem.Name);
-        Assert.Equal(updatedDescription, updatedItem.Description);
-        Assert.Equal(updatedIsCompleted, updatedItem.IsCompleted);
-        Assert.Equal(updatedCategory, updatedItem.Category);
-
+        updatedItem.Should().NotBeNull();
+        updatedItem.Name.Should().Be(updatedName);
+        updatedItem.Description.Should().Be(updatedDescription);
+        updatedItem.Category.Should().Be(updatedCategory);
+        updatedItem.IsCompleted.Should().Be(updatedIsCompleted);
 
         var notUpdatedItem = await DbContext.ToDoItems.FindAsync(toDoItem2.ToDoItemId);
-        Assert.NotNull(notUpdatedItem);
-        Assert.Equal(toDoItem2.Name, notUpdatedItem.Name);
-        Assert.Equal(toDoItem2.Description, notUpdatedItem.Description);
-        Assert.Equal(toDoItem2.IsCompleted, notUpdatedItem.IsCompleted);
-        Assert.Equal(toDoItem2.Category, notUpdatedItem.Category);
+        notUpdatedItem.Should().NotBeNull();
+        notUpdatedItem.Should().Be(toDoItem2);
     }
 
     [Fact]
@@ -66,6 +65,7 @@ public class PutTests : TestsBase
         {
             Name = "Name not to be updated",
             Description = "Description not to be updated",
+            Category = "Category",
             IsCompleted = false
         };
         await DbContext.ToDoItems.AddAsync(toDoItem);
@@ -73,9 +73,9 @@ public class PutTests : TestsBase
         var toDoItemUpdateRequestDto = new ToDoItemUpdateRequestDto("Name after update", "Description after update", true, "Category after update");
 
         // Act
-        var result = await Controller.UpdateByIdAsync(9999, toDoItemUpdateRequestDto); // 9999 = nonexistent ID
+        var result = await Controller.UpdateByIdAsync(9999, toDoItemUpdateRequestDto);
 
         // Assert
-        Assert.IsType<NotFoundResult>(result);
+        result.Should().BeOfType<NotFoundResult>();
     }
 }

@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
 using ToDoList.Domain.DTOs;
 using ToDoList.Domain.Models;
-using ToDoList.Test.IntegrationTests;
+using ToDoList.Test.TestUtilities;
 
 public class GetTests : TestsBase
 {
@@ -19,6 +19,7 @@ public class GetTests : TestsBase
             ToDoItemId = 1,
             Name = "Name of task 1",
             Description = "Description 1",
+            Category = "Category 1",
             IsCompleted = false
         };
         RepositoryMock.ReadAsync().Returns([toDoItem1]);
@@ -76,6 +77,7 @@ public class GetTests : TestsBase
             ToDoItemId = 1,
             Name = "Name of task 1",
             Description = "Description 1",
+            Category = "Category 1",
             IsCompleted = false
         };
         RepositoryMock.ReadByIdAsync(1).Returns(toDoItem1);

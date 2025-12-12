@@ -1,12 +1,13 @@
 namespace ToDoList.Test.IntegrationTests;
 
+using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using ToDoList.Domain.Models;
 
 public class DeleteTests : TestsBase
 {
     [Fact]
-    public async Task DeleteDeleteById_ExistingId_DeletesOnlyTheOneItem_Async()
+    public async Task DeleteById_ExistingId_DeletesOnlyTheOneItem_Async()
     {
         // Arrange
         var itemToDelete = new ToDoItem
@@ -31,9 +32,9 @@ public class DeleteTests : TestsBase
         var result = await Controller.DeleteByIdAsync(itemToDelete.ToDoItemId);
 
         // Assert
-        Assert.IsType<NoContentResult>(result);
-        Assert.Null(DbContext.ToDoItems.Find(itemToDelete.ToDoItemId));
-        Assert.NotNull(DbContext.ToDoItems.Find(itemNotToDelete.ToDoItemId));
+        result.Should().BeOfType<NoContentResult>();
+        DbContext.ToDoItems.Find(itemToDelete.ToDoItemId).Should().BeNull();
+        DbContext.ToDoItems.Find(itemNotToDelete.ToDoItemId).Should().NotBeNull();
     }
 
     [Fact]
@@ -44,15 +45,16 @@ public class DeleteTests : TestsBase
         {
             Name = "Task not to be deleted",
             Description = "This task will not be deleted",
+            Category = "Category not to be deleted",
             IsCompleted = true
         };
         await DbContext.ToDoItems.AddAsync(itemToDelete);
         await DbContext.SaveChangesAsync();
 
         // Act
-        var result = await Controller.DeleteByIdAsync(9999); // 9999 = nonexistent ID
+        var result = await Controller.DeleteByIdAsync(9999);
 
         // Assert
-        Assert.IsType<NotFoundResult>(result);
+        result.Should().BeOfType<NotFoundResult>();
     }
 }

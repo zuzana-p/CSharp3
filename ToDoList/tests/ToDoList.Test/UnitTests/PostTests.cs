@@ -42,6 +42,7 @@ public class PostTests : TestsBase
         {
             Name = itemName,
             Description = itemDescription,
+            Category = itemCategory,
             IsCompleted = isCompleted
         });
     }
