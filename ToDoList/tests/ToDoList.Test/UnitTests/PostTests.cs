@@ -15,21 +15,22 @@ public class PostTests : TestsBase
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void Post_CreateValidRequest_ReturnsCreatedAtAction(bool isCompleted)
+    public async Task Post_CreateValidRequest_ReturnsCreatedAtAction_Async(bool isCompleted)
     {
         // Arrange
-        string itemName = "Name of task";
-        string itemDescription = "Description of task";
-        var toDoItemCreateRequestDto = new ToDoItemCreateRequestDto(itemName, itemDescription, isCompleted);
+        string itemName = "Name of the task";
+        string itemDescription = "Description of the task";
+        string itemCategory = "Category of the task";
+        var toDoItemCreateRequestDto = new ToDoItemCreateRequestDto(itemName, itemDescription, isCompleted, itemCategory);
 
         // Act
-        var result = Controller.Create(toDoItemCreateRequestDto);
+        var result = await Controller.CreateAsync(toDoItemCreateRequestDto);
 
         // Assert
-        RepositoryMock.Received(1).Create(Arg.Any<ToDoItem>());
+        await RepositoryMock.Received(1).CreateAsync(Arg.Any<ToDoItem>());
 
         var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result.Result);
-        createdAtActionResult.ActionName.Should().Be("ReadById");
+        createdAtActionResult.ActionName.Should().Be("ReadByIdAsync");
 
         var todoItemResponseDto = createdAtActionResult.Value as ToDoItemGetResponseDto;
         todoItemResponseDto.Should().NotBeNull();
@@ -41,22 +42,23 @@ public class PostTests : TestsBase
         {
             Name = itemName,
             Description = itemDescription,
+            Category = itemCategory,
             IsCompleted = isCompleted
         });
     }
 
     [Fact]
-    public void Post_CreateUnhandledException_ReturnsInternalServerError()
+    public async Task Post_CreateUnhandledException_ReturnsInternalServerError_Async()
     {
         // Arrange
-        var toDoItemCreateRequestDto = new ToDoItemCreateRequestDto("Name", "Description", false);
-        RepositoryMock.When(x => x.Create(Arg.Any<ToDoItem>())).Do(_ => throw new InvalidOperationException());
+        var toDoItemCreateRequestDto = new ToDoItemCreateRequestDto("Name", "Description", false, "Category");
+        RepositoryMock.When(x => x.CreateAsync(Arg.Any<ToDoItem>())).Do(_ => throw new InvalidOperationException());
 
         // Act
-        var result = Controller.Create(toDoItemCreateRequestDto);
+        var result = await Controller.CreateAsync(toDoItemCreateRequestDto);
 
         // Assert
-        RepositoryMock.Received(1).Create(Arg.Any<ToDoItem>());
+        await RepositoryMock.Received(1).CreateAsync(Arg.Any<ToDoItem>());
 
         var objectResult = result.Result as ObjectResult;
         objectResult.Should().NotBeNull();

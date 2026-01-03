@@ -1,50 +1,47 @@
 namespace ToDoList.Persistence.Repositories;
 
-using System.Data;
+using Microsoft.EntityFrameworkCore;
 using ToDoList.Domain.Exceptions;
 using ToDoList.Domain.Models;
 
 
-public class ToDoItemsRepository(ToDoItemsContext dbContext) : IRepository<ToDoItem>
+public class ToDoItemsRepository(ToDoItemsContext dbContext) : IRepositoryAsync<ToDoItem>
 {
     private readonly ToDoItemsContext dbContext = dbContext;
 
-    public void Create(ToDoItem item)
+    public async Task CreateAsync(ToDoItem item)
     {
-        dbContext.Add(item);
-        dbContext.SaveChanges();
+        await dbContext.AddAsync(item);
+        await dbContext.SaveChangesAsync();
     }
 
-    public IEnumerable<ToDoItem> Read() => [.. dbContext.ToDoItems];
+    public async Task<IEnumerable<ToDoItem>> ReadAsync() => await dbContext.ToDoItems.ToListAsync();
 
-    public ToDoItem? ReadById(int id) => dbContext.ToDoItems.Find(id);
+    public async Task<ToDoItem?> ReadByIdAsync(int id) => await dbContext.ToDoItems.FindAsync(id);
 
-    public void UpdateById(int id, ToDoItem toDoItemValuesAfterUpdate)
+    public async Task UpdateByIdAsync(ToDoItem toDoItemValuesAfterUpdate)
     {
-        var toDoItem = dbContext.ToDoItems.Find(id);
+        var toDoItem = await dbContext.ToDoItems.FindAsync(toDoItemValuesAfterUpdate.ToDoItemId);
 
         if (toDoItem != null)
         {
-            toDoItem.Name = toDoItemValuesAfterUpdate.Name; // noteZPA Context.Entry(foundItem).CurrentValues.SetValues(item)
-            toDoItem.Description = toDoItemValuesAfterUpdate.Description;
-            toDoItem.IsCompleted = toDoItemValuesAfterUpdate.IsCompleted;
-
-            dbContext.SaveChanges();
+            dbContext.Entry(toDoItem).CurrentValues.SetValues(toDoItemValuesAfterUpdate);
+            await dbContext.SaveChangesAsync();
         }
         else
         {
-            throw new EntityNotFoundException(nameof(ToDoItem), id);
+            throw new EntityNotFoundException(nameof(ToDoItem), toDoItemValuesAfterUpdate.ToDoItemId);
         }
     }
 
-    public void DeleteById(int id)
+    public async Task DeleteByIdAsync(int id)
     {
-        var toDoItemToDelete = dbContext.ToDoItems.Find(id);
+        var toDoItemToDelete = await dbContext.ToDoItems.FindAsync(id);
 
         if (toDoItemToDelete != null)
         {
             dbContext.ToDoItems.Remove(toDoItemToDelete);
-            dbContext.SaveChanges();
+            await dbContext.SaveChangesAsync();
         }
         else
         {

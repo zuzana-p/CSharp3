@@ -3,16 +3,11 @@
 using Microsoft.EntityFrameworkCore;
 using ToDoList.Domain.Models;
 
-public class ToDoItemsContext : DbContext // pro interakci s DB
+public class ToDoItemsContext(string connectionString = "DataSource=../../data/localdb.db") : DbContext
 {
-    private readonly string connectionString;
-    public ToDoItemsContext(string connectionString = "DataSource=../../data/localdb.db", int maxUsedId = 0) // parametr = kde se nachazi DB
-    {
-        this.connectionString = connectionString;
-        Database.Migrate();
-    }
+    private readonly string connectionString = connectionString;
 
     public DbSet<ToDoItem> ToDoItems { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => _ = optionsBuilder.UseSqlite(connectionString); // přetížení
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => _ = optionsBuilder.UseSqlite(connectionString);
 }

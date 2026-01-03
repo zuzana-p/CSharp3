@@ -22,8 +22,10 @@ namespace ToDoList.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Category")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("TEXT");
 

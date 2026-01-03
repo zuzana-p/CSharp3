@@ -1,5 +1,6 @@
 namespace ToDoList.WebApi;
 
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using ToDoList.Domain.DTOs;
 using ToDoList.Domain.Exceptions;
@@ -8,20 +9,20 @@ using ToDoList.Persistence.Repositories;
 
 [Route("api/[controller]")] //localhost:5000/api/ToDoItems
 [ApiController]
-public class ToDoItemsController(IRepository<ToDoItem> repository) : ControllerBase
+public class ToDoItemsController(IRepositoryAsync<ToDoItem> repository) : ControllerBase
 {
-    private readonly IRepository<ToDoItem> repository = repository;
+    private readonly IRepositoryAsync<ToDoItem> repository = repository;
 
     [HttpPost]
-    public ActionResult<ToDoItemGetResponseDto> Create(ToDoItemCreateRequestDto request)
+    public async Task<ActionResult<ToDoItemGetResponseDto>> CreateAsync(ToDoItemCreateRequestDto request)
     {
         try
         {
             var toDoItem = request.ToDomain();
-            repository.Create(toDoItem);
+            await repository.CreateAsync(toDoItem);
 
             return CreatedAtAction(
-            actionName: nameof(ReadById),
+            actionName: nameof(ReadByIdAsync),
             routeValues: new { toDoItemId = toDoItem.ToDoItemId },
             value: new ToDoItemGetResponseDto(toDoItem)
             );
@@ -33,11 +34,11 @@ public class ToDoItemsController(IRepository<ToDoItem> repository) : ControllerB
     }
 
     [HttpGet]
-    public ActionResult<IEnumerable<ToDoItemGetResponseDto>> Read()
+    public async Task<ActionResult<IEnumerable<ToDoItemGetResponseDto>>> ReadAsync()
     {
         try
         {
-            var toDoItems = repository.Read();
+            var toDoItems = await repository.ReadAsync();
             if (!toDoItems.Any())
             {
                 return NotFound();
@@ -53,12 +54,13 @@ public class ToDoItemsController(IRepository<ToDoItem> repository) : ControllerB
         }
     }
 
-    [HttpGet("{todoItemId:int}")]
-    public ActionResult<ToDoItemGetResponseDto> ReadById(int toDoItemId)
+    [HttpGet("{toDoItemId:int}")]
+    [ActionName(nameof(ReadByIdAsync))] // to help routing with async suffix, see https://www.josephguadagno.net/2020/07/01/no-route-matches-the-supplied-values
+    public async Task<ActionResult<ToDoItemGetResponseDto>> ReadByIdAsync(int toDoItemId)
     {
         try
         {
-            var item = repository.ReadById(toDoItemId);
+            var item = await repository.ReadByIdAsync(toDoItemId);
 
             if (item == null)
             {
@@ -75,13 +77,14 @@ public class ToDoItemsController(IRepository<ToDoItem> repository) : ControllerB
         }
     }
 
-    [HttpPut("{todoItemId:int}")]
-    public IActionResult UpdateById(int todoItemId, [FromBody] ToDoItemUpdateRequestDto request)
+    [HttpPut("{toDoItemId:int}")]
+    public async Task<IActionResult> UpdateByIdAsync(int toDoItemId, [FromBody] ToDoItemUpdateRequestDto request)
     {
         try
         {
             var toDoItemValuesAfterUpdate = request.ToDomain();
-            repository.UpdateById(todoItemId, toDoItemValuesAfterUpdate);
+            toDoItemValuesAfterUpdate.ToDoItemId = toDoItemId;
+            await repository.UpdateByIdAsync(toDoItemValuesAfterUpdate);
             return NoContent();
         }
         catch (EntityNotFoundException)
@@ -96,11 +99,11 @@ public class ToDoItemsController(IRepository<ToDoItem> repository) : ControllerB
 
 
     [HttpDelete("{todoItemId:int}")]
-    public IActionResult DeleteById(int todoItemId)
+    public async Task<IActionResult> DeleteByIdAsync(int todoItemId)
     {
         try
         {
-            repository.DeleteById(todoItemId);
+            await repository.DeleteByIdAsync(todoItemId);
             return NoContent();
         }
         catch (EntityNotFoundException)

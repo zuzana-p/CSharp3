@@ -1,98 +1,97 @@
 ﻿namespace ToDoList.Test.IntegrationTests;
 
+using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using ToDoList.Domain.DTOs;
 using ToDoList.Domain.Models;
+using ToDoList.Test.TestUtilities;
 
 public class GetTests : TestsBase
 {
     [Fact]
-    public void Get_AllItems_ReturnsAllItems()
+    public async Task Get_AllItems_ReturnsAllItems_Async()
     {
         // Arrange
         var toDoItem1 = new ToDoItem
         {
             Name = "Name of task 1",
             Description = "Description 1",
+            Category = "Category 1",
             IsCompleted = false
         };
         var toDoItem2 = new ToDoItem
         {
             Name = "Name of task 2",
             Description = "Description 2",
+            Category = "Category 2",
             IsCompleted = true
         };
-        DbContext.ToDoItems.AddRange(toDoItem1, toDoItem2);
-        DbContext.SaveChanges();
+        await DbContext.ToDoItems.AddRangeAsync(toDoItem1, toDoItem2);
+        await DbContext.SaveChangesAsync();
 
         // Act
-        var result = Controller.Read();
+        var result = await Controller.ReadAsync();
 
         // Assert
         var dtoResult = Assert.IsType<List<ToDoItemGetResponseDto>>(result.GetValue());
 
         var returnedToDoItem1 = dtoResult.Find(x => x.ToDoItemId == toDoItem1.ToDoItemId);
-        Assert.NotNull(returnedToDoItem1);
-        Assert.Equal(toDoItem1.ToDoItemId, returnedToDoItem1.ToDoItemId);
-        Assert.Equal(toDoItem1.Name, returnedToDoItem1.Name);
-        Assert.Equal(toDoItem1.Description, returnedToDoItem1.Description);
-        Assert.Equal(toDoItem1.IsCompleted, returnedToDoItem1.IsCompleted);
+        returnedToDoItem1.Should().NotBeNull();
+        returnedToDoItem1.Should().BeEquivalentTo(toDoItem1);
 
         var returnedToDoItem2 = dtoResult.Find(x => x.ToDoItemId == toDoItem2.ToDoItemId);
-        Assert.NotNull(returnedToDoItem2);
-        Assert.Equal(toDoItem2.ToDoItemId, returnedToDoItem2.ToDoItemId);
-        Assert.Equal(toDoItem2.Name, returnedToDoItem2.Name);
-        Assert.Equal(toDoItem2.Description, returnedToDoItem2.Description);
-        Assert.Equal(toDoItem2.IsCompleted, returnedToDoItem2.IsCompleted);
+        returnedToDoItem2.Should().NotBeNull();
+        returnedToDoItem2.Should().BeEquivalentTo(toDoItem2);
     }
 
     [Fact]
-    public void GetById_ItemId_ReturnsItem()
+    public async Task GetById_ItemId_ReturnsItem_Async()
     {
         // Arrange
         var toDoItem1 = new ToDoItem
         {
             Name = "Name of task 1",
             Description = "Description 1",
+            Category = "Category 1",
             IsCompleted = false
         };
         var toDoItem2 = new ToDoItem
         {
             Name = "Name of task 2",
             Description = "Description 2",
+            Category = "Category 2",
             IsCompleted = true
         };
-        DbContext.ToDoItems.AddRange(toDoItem1, toDoItem2);
-        DbContext.SaveChanges();
+        await DbContext.ToDoItems.AddRangeAsync(toDoItem1, toDoItem2);
+        await DbContext.SaveChangesAsync();
 
         // Act
-        var result = Controller.ReadById(toDoItem1.ToDoItemId);
+        var result = await Controller.ReadByIdAsync(toDoItem1.ToDoItemId);
 
         // Assert
-        var dtoResult = Assert.IsType<ToDoItemGetResponseDto>(result.GetValue());
-        Assert.Equal(toDoItem1.ToDoItemId, dtoResult.ToDoItemId);
-        Assert.Equal(toDoItem1.Name, dtoResult.Name);
-        Assert.Equal(toDoItem1.Description, dtoResult.Description);
-        Assert.Equal(toDoItem1.IsCompleted, dtoResult.IsCompleted);
+        var dtoResult = result.GetValue();
+        dtoResult.Should().BeOfType<ToDoItemGetResponseDto>();
+        dtoResult.Should().BeEquivalentTo(toDoItem1);
     }
 
     [Fact]
-    public void GetById_NonExistenstId_Returns404NotFound()
+    public async Task GetById_NonExistenstId_Returns404NotFound_Async()
     {
         // Arrange
         var toDoItem1 = new ToDoItem
         {
             Name = "Name of task 1",
             Description = "Description 1",
+            Category = "Category 1",
             IsCompleted = false
         };
-        DbContext.ToDoItems.Add(toDoItem1);
-        DbContext.SaveChanges();
+        await DbContext.ToDoItems.AddAsync(toDoItem1);
+        await DbContext.SaveChangesAsync();
 
         // Act
-        var result = Controller.ReadById(9999); // 9999 = nonexistent ID
+        var result = await Controller.ReadByIdAsync(9999);
 
         // Assert
-        Assert.IsType<NotFoundResult>(result.Result);
+        result.Result.Should().BeOfType<NotFoundResult>();
     }
 }

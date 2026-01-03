@@ -1,92 +1,80 @@
-﻿@using ToDoList.Frontend.Models
+﻿@using ToDoList.Frontend.Clients
+@using ToDoList.Frontend.Components.Base
+@using ToDoList.Frontend.Models
 
+@inject IToDoItemsClient toDoItemsClient
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JS
+@inherits ErrorHandlingComponentBase
+
+
+
+
+<!-- Table -->
 <div>
-    <h2>ToDo Items Dashboard</h2>
-    <table>
-        <thead>
+    <h2 class="text-center mt-4 text-secondary align-items-center">TODO ITEMS DASHBOARD</h2>
+    <table class="table table-hover mt-3 align-middle">
+        <thead class="table-dark align-middle">
             <tr>
+                <th></th>
                 <th>
-                    ID
-                    <button @onclick="OrderById">⇅</button>
+                    <SortButton Ascending="@sortAscendingById" OnClick="OrderById" />
+                    id
                 </th>
                 <th>
-                    NAME
-                    <button @onclick="OrderByName">⇅</button>
+                    <SortButton Ascending="@sortAscendingByName" OnClick="OrderByName" />
+                    name
                 </th>
-                <th>DESCRIPTION</th>
+                <th>description</th>
+                <th>
+                    <SortButton Ascending="@sortAscendingByCategory" OnClick="OrderByCategory" />
+                    category
+                </th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
             @foreach (var item in sortedData)
             {
-                <tr>
+                <tr class="table-secondary">
+                    <td class="text-left"><button class="btn btn-outline-success" @onclick="() => SwitchIsCompleted(item)">
+                            @(item.IsCompleted ?
+                                                    (MarkupString)"<i class=\"bi bi-check-circle-fill\"></i>" :
+                                                    (MarkupString)"<i class=\"bi bi-circle\"></i>")
+                        </button></td>
                     <td>@item.Id</td>
                     <td>@item.Name</td>
                     <td>@item.Description</td>
-                    <td>@(item.IsCompleted ? "☑" : "☐")</td>
+                    <td>@item.Category</td>
+                    <td class="text-end"><button class="btn btn-outline-success" @onclick="() => EditItem(item)">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button class="btn btn-outline-danger" @onclick="() => DeleteItemAsync(item)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
                 </tr>
             }
         </tbody>
     </table>
 </div>
 
-<style>
-    table {
-        text-align: left;
-        border-collapse: collapse;
-    }
+@if (ShowErrorModal)
+{
+    <SomethingWentWrongModal Visible="@ShowErrorModal" OnClose="HandleModalClose" Message="@ErrorMessage" />
+}
 
-    th {
-        background-color: #469b90;
-        font-weight: bold;
-    }
-
-    td,
-    th {
-        border-bottom: 1px solid rgb(116, 109, 109);
-        padding: 12px 16px;
-    }
-
-    tr:hover td {
-        background-color: #f0da5d;
-    }
-
-    tr:last-child td {
-        border-bottom: none;
-    }
-
-    th button {
-        border: 0.5px solid rgb(116, 109, 109);
-        background: transparent;
-        cursor: pointer;
-        font-size: 14px;
-        padding: 0 4px;
-    }
-
-    th button:hover {
-        background-color: #f0da5d;
-    }
-</style>
 
 @code {
-    private List<ToDoItemView> testData = new()
-{
-new ToDoItemView(1, "Nakoupit potraviny", "Mléko, chléb, vejce", false),
-new ToDoItemView(2, "Dokončit projekt", "Implementovat všechny funkce", true),
-new ToDoItemView(3, "Zavolat mamince", "Domluvit víkend", false),
-new ToDoItemView(4, "Cvičit", "Běhání v parku", false),
-new ToDoItemView(5, "Přečíst knihu", "Kapitola 5", true)
-};
-
     private List<ToDoItemView> sortedData = new();
-
-    protected override void OnInitialized()
-    {
-        sortedData = testData.ToList();
-    }
-
     bool sortAscendingById = false;
+    bool sortAscendingByName = false;
+    bool sortAscendingByCategory = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        sortedData = await toDoItemsClient.ReadItemsAsync(); // todoZPA read není vůbec ošetřený chybovou hláškou v UI
+    }
 
     private void OrderById()
     {
@@ -102,8 +90,6 @@ new ToDoItemView(5, "Přečíst knihu", "Kapitola 5", true)
         }
     }
 
-    bool sortAscendingByName = false;
-
     private void OrderByName()
     {
         sortAscendingByName = !sortAscendingByName;
@@ -115,6 +101,48 @@ new ToDoItemView(5, "Přečíst knihu", "Kapitola 5", true)
         else
         {
             sortedData = sortedData.OrderByDescending(x => x.Name).ToList();
+        }
+    }
+
+    private void OrderByCategory()
+    {
+        sortAscendingByCategory = !sortAscendingByCategory;
+
+        if (sortAscendingByCategory)
+        {
+            sortedData = sortedData.OrderBy(x => x.Category).ToList();
+        }
+        else
+        {
+            sortedData = sortedData.OrderByDescending(x => x.Category).ToList();
+        }
+    }
+
+    private void EditItem(ToDoItemView toDoItem)
+    {
+        NavigationManager.NavigateTo($"editToDoItem/{toDoItem.Id}");
+    }
+
+    private async Task SwitchIsCompleted(ToDoItemView item)
+    {
+        var itemCopy = item with { };
+        var switchedIsCompleted = !item.IsCompleted;
+        itemCopy.IsCompleted = switchedIsCompleted;
+        var succesfulResponse = await ExecuteWithErrorHandlingAsync(async () => await
+        toDoItemsClient.UpdateItemAsync(itemCopy));
+        if (succesfulResponse)
+        {
+            item.IsCompleted = switchedIsCompleted;
+        }
+    }
+
+    private async Task DeleteItemAsync(ToDoItemView item)
+    {
+        var succesfulResponse = await ExecuteWithErrorHandlingAsync(async () => await
+        toDoItemsClient.DeleteItemByIdAsync(item));
+        if (succesfulResponse)
+        {
+            sortedData = await toDoItemsClient.ReadItemsAsync(); // todoZPA read není vůbec ošetřený chybovou hláškou v UI
         }
     }
 }

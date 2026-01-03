@@ -6,12 +6,12 @@ using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
 using ToDoList.Domain.DTOs;
 using ToDoList.Domain.Models;
-using ToDoList.Test.IntegrationTests;
+using ToDoList.Test.TestUtilities;
 
 public class GetTests : TestsBase
 {
     [Fact]
-    public void Get_ReadWhenSomeItemAvailable_ReturnsOk()
+    public async Task Get_ReadWhenSomeItemAvailable_ReturnsOk_Async()
     {
         // Arrange
         var toDoItem1 = new ToDoItem
@@ -19,15 +19,16 @@ public class GetTests : TestsBase
             ToDoItemId = 1,
             Name = "Name of task 1",
             Description = "Description 1",
+            Category = "Category 1",
             IsCompleted = false
         };
-        RepositoryMock.Read().Returns([toDoItem1]);
+        RepositoryMock.ReadAsync().Returns([toDoItem1]);
 
         // Act
-        var result = Controller.Read();
+        var result = await Controller.ReadAsync();
 
         // Assert
-        RepositoryMock.Received(1).Read();
+        await RepositoryMock.Received(1).ReadAsync();
 
         var dtoResult = Assert.IsType<List<ToDoItemGetResponseDto>>(result.GetValue());
 
@@ -37,30 +38,30 @@ public class GetTests : TestsBase
     }
 
     [Fact]
-    public void Get_ReadWhenNoItemAvailable_ReturnsNotFound()
+    public async Task Get_ReadWhenNoItemAvailable_ReturnsNotFound_Async()
     {
         // Arrange
 
         //Act
-        var result = Controller.Read();
+        var result = await Controller.ReadAsync();
 
         // Assert
-        RepositoryMock.Received(1).Read();
+        await RepositoryMock.Received(1).ReadAsync();
 
         result.Result.Should().BeOfType<NotFoundResult>();
     }
 
     [Fact]
-    public void Get_ReadUnhandledException_ReturnsInternalServerError()
+    public async Task Get_ReadUnhandledException_ReturnsInternalServerError_Async()
     {
         // Arrange
-        RepositoryMock.When(x => x.Read()).Do(x => throw new InvalidOperationException());
+        RepositoryMock.When(x => x.ReadAsync()).Do(x => throw new InvalidOperationException());
 
         // Act
-        var result = Controller.Read();
+        var result = await Controller.ReadAsync();
 
         // Assert
-        RepositoryMock.Received(1).Read();
+        await RepositoryMock.Received(1).ReadAsync();
 
         var objectResult = result.Result as ObjectResult;
         objectResult.Should().NotBeNull();
@@ -68,7 +69,7 @@ public class GetTests : TestsBase
     }
 
     [Fact]
-    public void Get_ReadByIdWhenSomeItemAvailable_ReturnsOk()
+    public async Task Get_ReadByIdWhenSomeItemAvailable_ReturnsOk_Async()
     {
         // Arrange
         var toDoItem1 = new ToDoItem
@@ -76,47 +77,48 @@ public class GetTests : TestsBase
             ToDoItemId = 1,
             Name = "Name of task 1",
             Description = "Description 1",
+            Category = "Category 1",
             IsCompleted = false
         };
-        RepositoryMock.ReadById(1).Returns(toDoItem1);
+        RepositoryMock.ReadByIdAsync(1).Returns(toDoItem1);
 
         // Act
-        var result = Controller.ReadById(toDoItem1.ToDoItemId);
+        var result = await Controller.ReadByIdAsync(toDoItem1.ToDoItemId);
 
         // Assert
-        RepositoryMock.Received(1).ReadById(1);
+        await RepositoryMock.Received(1).ReadByIdAsync(1);
 
         var dtoResult = Assert.IsType<ToDoItemGetResponseDto>(result.GetValue());
         dtoResult.Should().BeEquivalentTo(toDoItem1);
     }
 
     [Fact]
-    public void Get_ReadByIdWhenItemIsNull_ReturnsNotFound()
+    public async Task Get_ReadByIdWhenItemIsNull_ReturnsNotFound_Async()
     {
         // Arrange
-        RepositoryMock.ReadById(999).Returns(null as ToDoItem);
+        RepositoryMock.ReadByIdAsync(999).Returns(null as ToDoItem);
 
         // Act
-        var result = Controller.ReadById(999);
+        var result = await Controller.ReadByIdAsync(999);
 
         // Assert
-        RepositoryMock.Received(1).ReadById(999);
+        await RepositoryMock.Received(1).ReadByIdAsync(999);
 
         result.Result.Should().BeOfType<NotFoundResult>();
 
     }
 
     [Fact]
-    public void Get_ReadByIdUnhandledException_ReturnsInternalServerError()
+    public async Task Get_ReadByIdUnhandledException_ReturnsInternalServerError_Async()
     {
         // Arrange
-        RepositoryMock.When(x => x.ReadById(1)).Do(x => throw new InvalidOperationException());
+        RepositoryMock.When(x => x.ReadByIdAsync(1)).Do(x => throw new InvalidOperationException());
 
         // Act
-        var result = Controller.ReadById(1);
+        var result = await Controller.ReadByIdAsync(1);
 
         // Assert
-        RepositoryMock.Received(1).ReadById(1);
+        await RepositoryMock.Received(1).ReadByIdAsync(1);
 
         var objectResult = result.Result as ObjectResult;
         objectResult.Should().NotBeNull();
